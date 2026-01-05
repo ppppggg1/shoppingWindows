@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生成绩管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 侧边导航栏 */
+        .sidebar {
+            width: 200px;
+            background-color: #2f3e53;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding-top: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #3a4b63;
+        }
+
+        .sidebar-header i {
+            font-size: 24px;
+            color: #667eea;
+        }
+
+        .sidebar-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 14px;
+            text-decoration: none;
+            color: #fff;
+            display: block;
+        }
+
+        .menu-item.active {
+            background-color: #165dff;
+            color: #fff;
+        }
+
+        .menu-item:hover:not(.active) {
+            background-color: #3a4b63;
+        }
+
+        .menu-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .submenu {
+            padding-left: 40px;
+            background-color: #29384c;
+            display: none; /* 默认隐藏子菜单 */
+        }
+
+        .submenu .menu-item {
+            padding: 10px 20px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* 顶部导航栏 */
+        .topbar {
+            height: 60px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topbar-menu-btn {
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .topbar-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .topbar-notice {
+            font-size: 18px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .notice-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background-color: #ff4d4f;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .topbar-layout-btn {
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .topbar-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .user-name {
+            font-size: 14px;
+        }
+
+        /* 欢迎栏 */
+        .welcome-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px 30px;
+            margin: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .welcome-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background-color: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .welcome-text h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .welcome-text p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .welcome-time {
+            text-align: right;
+        }
+
+        .time-clock {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .time-date {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .time-weather {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        /* 数据卡片区 */
+        .data-cards {
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .data-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .icon-purple {
+            background-color: #9c27b0;
+        }
+
+        .icon-pink {
+            background-color: #e91e63;
+        }
+
+        .icon-blue {
+            background-color: #2196f3;
+        }
+
+        .icon-green {
+            background-color: #4caf50;
+        }
+
+        .card-data h4 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-data p {
+            font-size: 14px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* 图表区 */
+        .charts-area {
+            padding: 0 20px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .chart-container {
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* 成绩分布饼图 */
+        .score-pie {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(
+                #2196f3 0% 20%,
+                #4caf50 20% 60%,
+                #ffc107 60% 75%,
+                #ff5722 75% 85%,
+                #f44336 85% 100%
+            );
+            position: relative;
+        }
+
+        .pie-center {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pie-label {
+            position: absolute;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .label-excellent {
+            top: 30px;
+            right: 10px;
+        }
+
+        .label-good {
+            bottom: 20px;
+            left: 50px;
+        }
+
+        .label-medium {
+            top: 80px;
+            left: 10px;
+        }
+
+        .label-pass {
+            top: 120px;
+            right: 50px;
+        }
+
+        .label-fail {
+            bottom: 50px;
+            right: 20px;
+        }
+
+        .score-legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        /* 班级优秀率柱状图 */
+        .class-bar {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 20px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            height: 25px;
+        }
+
+        .bar-label {
+            width: 120px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 100%;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background-color: #2196f3;
+            border-radius: 4px;
+        }
+
+        .bar-percent {
+            width: 50px;
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+        }
+
+        /* 内容容器（用于动态替换） */
+        .content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        /* 其他页面内容的占位样式 */
+        .page-content {
+            padding: 20px;
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .page-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+    </style>
+    <!-- 引入图标库 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 侧边导航栏（固定，不刷新） -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-graduation-cap"></i>
+            <h2>成绩管理系统</h2>
+        </div>
+        <div class="sidebar-menu">
+            <!-- 系统首页（Hash路由：#/index） -->
+            <div class="menu-item" data-route="/index">
+                <i class="fas fa-home"></i>
+                <span>系统首页</span>
+            </div>
+            <!-- 成绩管理（Hash路由：#/score） -->
+            <div class="menu-item" data-route="/score">
+                <i class="fas fa-clipboard-list"></i>
+                <span>成绩管理</span>
+            </div>
+            <!-- 课程管理（Hash路由：#/course） -->
+            <div class="menu-item" data-route="/course">
+                <i class="fas fa-book"></i>
+                <span>课程管理</span>
+            </div>
+            <!-- 班级管理（Hash路由：#/class） -->
+            <div class="menu-item" data-route="/class">
+                <i class="fas fa-users"></i>
+                <span>班级管理</span>
+            </div>
+            <!-- 教师管理（Hash路由：#/teacher） -->
+            <div class="menu-item" data-route="/teacher">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <span>教师管理</span>
+            </div>
+            <!-- 统计分析（父菜单，展开子菜单） -->
+            <div class="menu-item" id="statisticMenu">
+                <i class="fas fa-chart-pie"></i>
+                <span>统计分析</span>
+            </div>
+            <div class="submenu" id="statisticSubmenu">
+                <!-- 成绩分析（Hash路由：#/score-analysis） -->
+                <div class="menu-item" data-route="/score-analysis">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>成绩分析</span>
+                </div>
+                <!-- 班级对比（Hash路由：#/class-compare） -->
+                <div class="menu-item" data-route="/class-compare">
+                    <i class="fas fa-table"></i>
+                    <span>班级对比</span>
+                </div>
+                <!-- 课程趋势（Hash路由：#/course-trend） -->
+                <div class="menu-item" data-route="/course-trend">
+                    <i class="fas fa-line-chart"></i>
+                    <span>课程趋势</span>
+                </div>
+                <!-- 薄弱点分析（Hash路由：#/weak-point） -->
+                <div class="menu-item" data-route="/weak-point">
+                    <i class="fas fa-search-minus"></i>
+                    <span>薄弱点分析</span>
+                </div>
+            </div>
+            <!-- 系统管理（Hash路由：#/system） -->
+            <div class="menu-item" data-route="/system">
+                <i class="fas fa-cog"></i>
+                <span>系统管理</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区（动态替换内容） -->
+    <div class="main-content">
+        <!-- 顶部导航栏（固定，不刷新） -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-menu-btn" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="topbar-title" id="currentPageTitle">首页</div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-notice" id="noticeBtn">
+                    <i class="fas fa-bell"></i>
+                    <div class="notice-badge">3</div>
+                </div>
+                <div class="topbar-layout-btn" id="layoutBtn">
+                    <i class="fas fa-th"></i>
+                </div>
+                <div class="topbar-user" id="userBtn">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-name">系统管理员</div>
+                    <i class="fas fa-angle-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 内容容器（动态替换部分） -->
+        <div class="content-wrapper" id="contentWrapper">
+            <!-- 初始内容：系统首页 -->
+            <div class="welcome-bar">
+                <div class="welcome-info">
+                    <div class="welcome-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="welcome-text">
+                        <h3>夜深了，注意休息，系统管理员！欢迎使用学生成绩管理系统</h3>
+                        <p>今天是个美好的一天，让我们开始工作吧！<br>
+                        <span style="font-size: 12px; opacity: 0.8;">系统管理员 | 上次登录：2024-12-05 09:30:00</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="welcome-time">
+                    <div class="time-clock">00:34:05</div>
+                    <div class="time-date">2025年12月5日 星期五</div>
+                    <div class="time-weather">☀ 晴朗 22℃</div>
+                </div>
+            </div>
+
+            <div class="data-cards">
+                <div class="data-card" data-route="/student">
+                    <div class="card-icon icon-purple">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="card-data">
+                        <h4>10</h4>
+                        <p>学生总数</p>
+                    </div>
+                </div>
+                <div class="data-card" data-route="/teacher">
+                    <div class="card-icon icon-pink">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="card-data">
+                        <h4>5</h4>
+                        <p>教师总数</p>
+                    </div>
+                </div>
+                <div class="data-card" data-route="/course">
+                    <div class="card-icon icon-blue">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="card-data">
+                        <h4>8</h4>
+                        <p>课程总数</p>
+                    </div>
+                </div>
+                <div class="data-card" data-route="/class">
+                    <div class="card-icon icon-green">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="card-data">
+                        <h4>6</h4>
+                        <p>班级总数</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-area">
+                <div class="chart-card" data-route="/score-analysis">
+                    <div class="chart-title">成绩分布统计</div>
+                    <div class="chart-container">
+                        <div class="score-pie">
+                            <div class="pie-center"></div>
+                            <div class="pie-label label-excellent">优秀(90-100)</div>
+                            <div class="pie-label label-good">良好(80-89)</div>
+                            <div class="pie-label label-medium">中等(70-79)</div>
+                            <div class="pie-label label-pass">及格(60-69)</div>
+                            <div class="pie-label label-fail">不及格(0-59)</div>
+                        </div>
+                        <div class="score-legend">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #2196f3;"></div>
+                                <span>优秀(90-100)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #4caf50;"></div>
+                                <span>良好(80-89)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #ffc107;"></div>
+                                <span>中等(70-79)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #ff5722;"></div>
+                                <span>及格(60-69)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #f44336;"></div>
+                                <span>不及格(0-59)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card" data-route="/class-compare">
+                    <div class="chart-title">班级优秀率对比</div>
+                    <div class="chart-container">
+                        <div class="class-bar">
+                            <div class="bar-item">
+                                <div class="bar-label">软件工程2102班</div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-percent">0%</div>
+                            </div>
+                            <div class="bar-item">
+                                <div class="bar-label">软件工程2101班</div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-percent">0%</div>
+                            </div>
+                            <div class="bar-item">
+                                <div class="bar-label">计算机科学与技术2102班</div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="bar-percent">0%</div>
+                            </div>
+                            <div class="bar-item">
+                                <div class="bar-label">计算机科学与技术2101班</div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" style="width: 33.33%"></div>
+                                </div>
+                                <div class="bar-percent">33.33%</div>
+                            </div>
+                            <div class="bar-item">
+                                <div class="bar-label">网络工程2101班</div>
+                                <div class="bar-container">
+                                    <div class="bar-fill" style="width: 100%"></div>
+                                </div>
+                                <div class="bar-percent">100%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 实时更新时间
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            document.querySelector('.time-clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // ===================== 无刷新跳转核心逻辑（前端Hash路由） =====================
+        // 1. 定义路由映射：路由路径 → 页面内容
+        const routes = {
+            // 系统首页
+            '/index': {
+                title: '首页',
+                content: `
+                    <div class="welcome-bar">
+                        <div class="welcome-info">
+                            <div class="welcome-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="welcome-text">
+                                <h3>夜深了，注意休息，系统管理员！欢迎使用学生成绩管理系统</h3>
+                                <p>今天是个美好的一天，让我们开始工作吧！<br>
+                                <span style="font-size: 12px; opacity: 0.8;">系统管理员 | 上次登录：2024-12-05 09:30:00</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="welcome-time">
+                            <div class="time-clock">00:34:05</div>
+                            <div class="time-date">2025年12月5日 星期五</div>
+                            <div class="time-weather">☀ 晴朗 22℃</div>
+                        </div>
+                    </div>
+                    <div class="data-cards">
+                        <div class="data-card" data-route="/student">
+                            <div class="card-icon icon-purple">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <div class="card-data">
+                                <h4>10</h4>
+                                <p>学生总数</p>
+                            </div>
+                        </div>
+                        <div class="data-card" data-route="/teacher">
+                            <div class="card-icon icon-pink">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="card-data">
+                                <h4>5</h4>
+                                <p>教师总数</p>
+                            </div>
+                        </div>
+                        <div class="data-card" data-route="/course">
+                            <div class="card-icon icon-blue">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <div class="card-data">
+                                <h4>8</h4>
+                                <p>课程总数</p>
+                            </div>
+                        </div>
+                        <div class="data-card" data-route="/class">
+                            <div class="card-icon icon-green">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="card-data">
+                                <h4>6</h4>
+                                <p>班级总数</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="charts-area">
+                        <div class="chart-card" data-route="/score-analysis">
+                            <div class="chart-title">成绩分布统计</div>
+                            <div class="chart-container">
+                                <div class="score-pie">
+                                    <div class="pie-center"></div>
+                                    <div class="pie-label label-excellent">优秀(90-100)</div>
+                                    <div class="pie-label label-good">良好(80-89)</div>
+                                    <div class="pie-label label-medium">中等(70-79)</div>
+                                    <div class="pie-label label-pass">及格(60-69)</div>
+                                    <div class="pie-label label-fail">不及格(0-59)</div>
+                                </div>
+                                <div class="score-legend">
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #2196f3;"></div>
+                                        <span>优秀(90-100)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #4caf50;"></div>
+                                        <span>良好(80-89)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #ffc107;"></div>
+                                        <span>中等(70-79)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #ff5722;"></div>
+                                        <span>及格(60-69)</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-color" style="background-color: #f44336;"></div>
+                                        <span>不及格(0-59)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-card" data-route="/class-compare">
+                            <div class="chart-title">班级优秀率对比</div>
+                            <div class="chart-container">
+                                <div class="class-bar">
+                                    <div class="bar-item">
+                                        <div class="bar-label">软件工程2102班</div>
+                                        <div class="bar-container">
+                                            <div class="bar-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div class="bar-percent">0%</div>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar-label">软件工程2101班</div>
+                                        <div class="bar-container">
+                                            <div class="bar-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div class="bar-percent">0%</div>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar-label">计算机科学与技术2102班</div>
+                                        <div class="bar-container">
+                                            <div class="bar-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div class="bar-percent">0%</div>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar-label">计算机科学与技术2101班</div>
+                                        <div class="bar-container">
+                                            <div class="bar-fill" style="width: 33.33%"></div>
+                                        </div>
+                                        <div class="bar-percent">33.33%</div>
+                                    </div>
+                                    <div class="bar-item">
+                                        <div class="bar-label">网络工程2101班</div>
+                                        <div class="bar-container">
+                                            <div class="bar-fill" style="width: 100%"></div>
+                                        </div>
+                                        <div class="bar-percent">100%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            // 成绩管理页面
+            '/score': {
+                title: '成绩管理',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">成绩管理</h2>
+                        <p class="page-desc">这里是学生成绩管理页面，可进行成绩录入、修改、查询、导出等操作。</p>
+                        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                            <p>功能列表：</p>
+                            <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
+                                <li>批量导入成绩</li>
+                                <li>单个学生成绩录入</li>
+                                <li>成绩修改与删除</li>
+                                <li>成绩按班级/科目筛选</li>
+                                <li>成绩导出为Excel</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            // 课程管理页面
+            '/course': {
+                title: '课程管理',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">课程管理</h2>
+                        <p class="page-desc">这里是课程管理页面，可进行课程的添加、修改、删除、分配教师等操作。</p>
+                        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                            <p>当前课程列表：</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                <thead>
+                                    <tr style="background: #f5f7fa;">
+                                        <th style="border: 1px solid #eee; padding: 10px; text-align: left;">课程ID</th>
+                                        <th style="border: 1px solid #eee; padding: 10px; text-align: left;">课程名称</th>
+                                        <th style="border: 1px solid #eee; padding: 10px; text-align: left;">授课教师</th>
+                                        <th style="border: 1px solid #eee; padding: 10px; text-align: left;">学分</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="border: 1px solid #eee; padding: 10px;">C001</td>
+                                        <td style="border: 1px solid #eee; padding: 10px;">Python程序设计</td>
+                                        <td style="border: 1px solid #eee; padding: 10px;">张老师</td>
+                                        <td style="border: 1px solid #eee; padding: 10px;">3</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #eee; padding: 10px;">C002</td>
+                                        <td style="border: 1px solid #eee; padding: 10px;">数据库原理</td>
+                                        <td style="border: 1px solid #eee; padding: 10px;">李老师</td>
+                                        <td style="border: 1px solid #eee; padding: 10px;">4</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `
+            },
+            // 班级管理页面
+            '/class': {
+                title: '班级管理',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">班级管理</h2>
+                        <p class="page-desc">这里是班级管理页面，可进行班级的创建、学生分配、班主任设置等操作。</p>
+                    </div>
+                `
+            },
+            // 教师管理页面
+            '/teacher': {
+                title: '教师管理',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">教师管理</h2>
+                        <p class="page-desc">这里是教师管理页面，可进行教师信息的添加、修改、删除等操作。</p>
+                    </div>
+                `
+            },
+            // 成绩分析页面
+            '/score-analysis': {
+                title: '成绩分析',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">成绩分析</h2>
+                        <p class="page-desc">这里是成绩分析页面，可查看各科目成绩分布、学生排名等详细数据。</p>
+                    </div>
+                `
+            },
+            // 班级对比页面
+            '/class-compare': {
+                title: '班级对比',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">班级对比</h2>
+                        <p class="page-desc">这里是班级对比页面，可对比不同班级的平均分、优秀率等指标。</p>
+                    </div>
+                `
+            },
+            // 课程趋势页面
+            '/course-trend': {
+                title: '课程趋势',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">课程趋势</h2>
+                        <p class="page-desc">这里是课程趋势页面，可查看各课程成绩的历年变化趋势。</p>
+                    </div>
+                `
+            },
+            // 薄弱点分析页面
+            '/weak-point': {
+                title: '薄弱点分析',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">薄弱点分析</h2>
+                        <p class="page-desc">这里是薄弱点分析页面，可识别学生的知识薄弱点并给出提升建议。</p>
+                    </div>
+                `
+            },
+            // 系统管理页面
+            '/system': {
+                title: '系统管理',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">系统管理</h2>
+                        <p class="page-desc">这里是系统管理页面，可进行用户权限设置、系统参数配置等操作。</p>
+                    </div>
+                `
+            },
+            // 学生管理页面（数据卡片跳转）
+            '/student': {
+                title: '学生管理',
+                content: `
+                    <div class="page-content">
+                        <h2 class="page-title">学生管理</h2>
+                        <p class="page-desc">这里是学生管理页面，可进行学生信息的添加、修改、删除等操作。</p>
+                    </div>
+                `
+            }
+        };
+
+        // 2. 获取DOM元素
+        const contentWrapper = document.getElementById('contentWrapper');
+        const currentPageTitle = document.getElementById('currentPageTitle');
+        const menuItems = document.querySelectorAll('.menu-item[data-route]');
+        const statisticMenu = document.getElementById('statisticMenu');
+        const statisticSubmenu = document.getElementById('statisticSubmenu');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.querySelector('.sidebar');
+
+        // 3. 切换路由的核心函数
+        function navigateTo(route) {
+            // 1. 验证路由是否存在
+            if (!routes[route]) {
+                route = '/index'; // 不存在则跳转到首页
+            }
+
+            // 2. 更新URL的Hash值（保留历史记录）
+            window.location.hash = route;
+
+            // 3. 更新主内容区
+            contentWrapper.innerHTML = routes[route].content;
+
+            // 4. 更新页面标题
+            currentPageTitle.textContent = routes[route].title;
+
+            // 5. 更新菜单选中状态
+            menuItems.forEach(item => {
+                item.classList.toggle('active', item.dataset.route === route);
+            });
+
+            // 6. 为新内容中的可点击元素绑定路由（如数据卡片、图表）
+            bindContentRoutes();
+        }
+
+        // 4. 为内容中的可点击元素绑定路由（如数据卡片、图表）
+        function bindContentRoutes() {
+            const contentItems = contentWrapper.querySelectorAll('[data-route]');
+            contentItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const route = this.dataset.route;
+                    navigateTo(route);
+                });
+            });
+        }
+
+        // 5. 监听Hash变化（用户手动修改URL时触发）
+        window.addEventListener('hashchange', function() {
+            const currentRoute = window.location.hash.slice(1) || '/index';
+            navigateTo(currentRoute);
+        });
+
+        // 6. 为菜单项目绑定点击事件
+        menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const route = this.dataset.route;
+                navigateTo(route);
+            });
+        });
+
+        // 7. 初始化页面（加载默认路由）
+        window.addEventListener('load', function() {
+            const initialRoute = window.location.hash.slice(1) || '/index';
+            navigateTo(initialRoute);
+            // 绑定内容中的路由
+            bindContentRoutes();
+        });
+
+        // 8. 统计分析菜单展开/收起
+        statisticMenu.addEventListener('click', function() {
+            statisticSubmenu.style.display = statisticSubmenu.style.display === 'block' ? 'none' : 'block';
+        });
+
+        // 9. 侧边栏收缩/展开
+        sidebarToggle.addEventListener('click', function() {
+            if (sidebar.style.width === '60px') {
+                sidebar.style.width = '200px';
+            } else {
+                sidebar.style.width = '60px';
+            }
+        });
+
+        // 10. 初始化子菜单状态
+        statisticSubmenu.style.display = 'none';
+    </script>
+</body>
+</html>

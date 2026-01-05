@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册 | 现代管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* 与登录页完全一致的紫色渐变背景 */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .register-container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px 35px;
+            overflow: hidden;
+            /* 与登录容器样式一致 */
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .register-header h1 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            /* 与登录页标题样式一致 */
+        }
+
+        .register-header p {
+            color: #718096;
+            font-size: 14px;
+            /* 与登录页副标题样式一致 */
+        }
+
+        .register-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            height: 52px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 16px 0 45px;
+            font-size: 15px;
+            color: #2d3748;
+            transition: all 0.3s ease;
+            outline: none;
+            /* 与登录页输入框样式完全一致 */
+        }
+
+        .form-group input:focus {
+            /* 聚焦时与登录页一致的紫色边框和阴影 */
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: #ffffff;
+        }
+
+        .form-group label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus + label {
+            /* 聚焦时标签变为登录页同款紫色 */
+            color: #667eea;
+        }
+
+        .form-tips {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 5px;
+            padding-left: 45px;
+        }
+
+        .pwd-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pwd-group .form-group {
+            flex: 1;
+        }
+
+        .register-btn {
+            height: 52px;
+            /* 与登录按钮完全一致的紫色渐变背景 */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .register-btn:hover {
+            transform: translateY(-2px);
+            /* 悬浮阴影与登录按钮一致 */
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .register-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #718096;
+            /* 与登录页注册链接容器样式一致 */
+        }
+
+        .login-link a {
+            /* 链接颜色与登录页一致 */
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 5px;
+        }
+
+        .login-link a:hover {
+            /*  hover时与登录页一致的深紫色 */
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        /* 校验提示样式 */
+        .error-tip {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            padding-left: 45px;
+            display: none;
+        }
+
+        .input-error {
+            border-color: #dc3545 !important;
+        }
+
+        .success-tip {
+            /* 成功提示使用主题紫色 */
+            color: #667eea;
+            font-size: 12px;
+            margin-top: 5px;
+            padding-left: 45px;
+            display: none;
+        }
+
+        /* 响应式适配（与登录页完全一致） */
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 30px 25px;
+            }
+
+            .register-header h1 {
+                font-size: 24px;
+            }
+
+            .form-group input {
+                height: 48px;
+            }
+
+            .register-btn {
+                height: 48px;
+            }
+
+            .pwd-group {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+    <!-- 与登录页共用同一个图标库 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="register-container">
+        <!-- 注册头部（与登录页布局一致） -->
+        <div class="register-header">
+            <h1>账号注册</h1>
+            <p>填写以下信息，创建你的账号</p>
+        </div>
+
+        <!-- 注册表单 -->
+        <form class="register-form" id="registerForm">
+            <div class="form-group">
+                <input type="text" id="username" placeholder="请输入登录用户名/手机号" required>
+                <label for="username">
+                    <i class="fas fa-user"></i>
+                </label>
+                <div class="error-tip" id="usernameError">用户名不能为空，且长度不小于3位</div>
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="nickname" placeholder="请输入用户昵称" required>
+                <label for="nickname">
+                    <i class="fas fa-id-card"></i>
+                </label>
+                <div class="error-tip" id="nicknameError">昵称不能为空</div>
+            </div>
+
+            <div class="form-group">
+                <input type="email" id="email" placeholder="请输入邮箱（选填）">
+                <label for="email">
+                    <i class="fas fa-envelope"></i>
+                </label>
+                <div class="form-tips">用于密码找回，建议填写真实邮箱</div>
+                <div class="error-tip" id="emailError">邮箱格式不正确</div>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="password" placeholder="请输入登录密码" required>
+                <label for="password">
+                    <i class="fas fa-lock"></i>
+                </label>
+                <div class="error-tip" id="passwordError">密码长度不小于6位，建议包含字母和数字</div>
+                <div class="form-tips">密码长度不少于6位，请勿使用简单密码</div>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="confirmPwd" placeholder="请确认登录密码" required>
+                <label for="confirmPwd">
+                    <i class="fas fa-lock-open"></i>
+                </label>
+                <div class="error-tip" id="confirmPwdError">两次输入的密码不一致</div>
+            </div>
+
+            <button type="submit" class="register-btn">提交注册</button>
+        </form>
+
+        <!-- 登录链接（与登录页注册链接样式对称） -->
+        <div class="login-link">
+            已有账号？
+            <a href="./" target="_self">立即登录</a>
+        </div>
+    </div>
+
+    <script>
+        // 获取表单元素和提示元素
+        const registerForm = document.getElementById('registerForm');
+        const username = document.getElementById('username');
+        const nickname = document.getElementById('nickname');
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        const confirmPwd = document.getElementById('confirmPwd');
+
+        const usernameError = document.getElementById('usernameError');
+        const nicknameError = document.getElementById('nicknameError');
+        const emailError = document.getElementById('emailError');
+        const passwordError = document.getElementById('passwordError');
+        const confirmPwdError = document.getElementById('confirmPwdError');
+
+        // 前端校验函数：显示错误提示
+        function showError(el, tipEl) {
+            el.classList.add('input-error');
+            tipEl.style.display = 'block';
+        }
+
+        // 隐藏错误提示
+        function hideError(el, tipEl) {
+            el.classList.remove('input-error');
+            tipEl.style.display = 'none';
+        }
+
+        // 邮箱格式校验
+        function isEmailValid(emailVal) {
+            if (!emailVal) return true; // 选填，为空时直接通过
+            const reg = /^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+            return reg.test(emailVal);
+        }
+
+        // 监听表单提交事件
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // 阻止默认刷新行为
+
+            // 获取输入值
+            const usernameVal = username.value.trim();
+            const nicknameVal = nickname.value.trim();
+            const emailVal = email.value.trim();
+            const passwordVal = password.value.trim();
+            const confirmPwdVal = confirmPwd.value.trim();
+
+            let isValid = true;
+
+            // 1. 用户名校验
+            if (!usernameVal || usernameVal.length < 3) {
+                showError(username, usernameError);
+                isValid = false;
+            } else {
+                hideError(username, usernameError);
+            }
+
+            // 2. 昵称校验
+            if (!nicknameVal) {
+                showError(nickname, nicknameError);
+                isValid = false;
+            } else {
+                hideError(nickname, nicknameError);
+            }
+
+            // 3. 邮箱格式校验
+            if (!isEmailValid(emailVal)) {
+                showError(email, emailError);
+                isValid = false;
+            } else {
+                hideError(email, emailError);
+            }
+
+            // 4. 密码校验
+            if (!passwordVal || passwordVal.length < 6) {
+                showError(password, passwordError);
+                isValid = false;
+            } else {
+                hideError(password, passwordError);
+            }
+
+            // 5. 确认密码校验
+            if (confirmPwdVal !== passwordVal) {
+                showError(confirmPwd, confirmPwdError);
+                isValid = false;
+            } else {
+                hideError(confirmPwd, confirmPwdError);
+            }
+
+            // 前端校验不通过，终止提交
+            if (!isValid) {
+                return;
+            }
+
+            // 前端校验通过，组装注册数据（与Flask后端JSON格式匹配）
+            const registerData = {
+                username: usernameVal,
+                nickname: nicknameVal,
+                email: emailVal,
+                password: passwordVal
+            };
+
+            try {
+                // 发送注册请求到Flask后端接口
+                const response = await fetch('/api/register-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // 与后端request.get_json()匹配
+                    },
+                    body: JSON.stringify(registerData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 注册成功提示，跳转到登录页
+                    alert(result.message || '注册成功！即将跳转到登录页');
+                    window.location.href = './'; // 跳转到登录页（根路径）
+                } else {
+                    // 注册失败提示（如用户名已存在）
+                    alert(result.message || '注册失败，请重试');
+                }
+            } catch (error) {
+                console.error('注册请求异常：', error);
+                alert('网络异常，请检查网络连接后重试');
+            }
+        });
+
+        // 实时监听输入，移除错误提示（提升用户体验）
+        [username, nickname, email, password, confirmPwd].forEach(input => {
+            input.addEventListener('input', function() {
+                const errorId = this.id + 'Error';
+                const errorTip = document.getElementById(errorId);
+                if (errorTip) {
+                    hideError(this, errorTip);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录 | 现代管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .login-container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 35px;
+            overflow: hidden;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            height: 52px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 16px 0 45px;
+            font-size: 15px;
+            color: #2d3748;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: #ffffff;
+        }
+
+        .form-group label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus + label {
+            color: #667eea;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #718096;
+        }
+
+        .remember-me input {
+            width: 16px;
+            height: 16px;
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+
+        .forgot-password a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            height: 52px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 5px;
+        }
+
+        .register-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 25px;
+            }
+
+            .login-header h1 {
+                font-size: 24px;
+            }
+
+            .form-group input {
+                height: 48px;
+            }
+
+            .login-btn {
+                height: 48px;
+            }
+        }
+    </style>
+    <!-- 引入图标库 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="login-container">
+        <!-- 登录头部 -->
+        <div class="login-header">
+            <h1>欢迎登录</h1>
+            <p>请输入您的账号和密码进行登录</p>
+        </div>
+
+        <!-- 登录表单 -->
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <input type="text" id="username" required placeholder="请输入用户名/手机号">
+                <label for="username">
+                    <i class="fas fa-user"></i>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="password" required placeholder="请输入密码">
+                <label for="password">
+                    <i class="fas fa-lock"></i>
+                </label>
+            </div>
+
+            <div class="form-options">
+                <div class="remember-me">
+                    <input type="checkbox" id="remember">
+                    <label for="remember">记住我</label>
+                </div>
+                <div class="forgot-password">
+                    <a href="/forgetpass" >忘记密码？</a>
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn">登录</button>
+        </form>
+
+        <!-- 注册链接 -->
+        <div class="register-link">
+            还没有账号？
+            <a href="/signup" >立即注册</a>
+        </div>
+    </div>
+
+    <script>
+             // 1. 获取表单元素
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const rememberCheckbox = document.getElementById('remember');
+        //页面加载时自动填充用户名
+        window.addEventListener('load', function() {
+        const savedUsername = localStorage.getItem('saved_login_username');
+        if (savedUsername) {
+            usernameInput.value = savedUsername;
+            rememberCheckbox.checked = true;
+        }
+        //表单提交时处理存储逻辑通过 rememberCheckbox.checked 判断是否勾选「记住我」。勾选：使用 localStorage.setItem() 保存用户名（永久有效）。未勾选：使用 localStorage.removeItem() 删除保存的用户名（不记忆）。
+        const isRemember = rememberCheckbox.checked;
+        if (isRemember) {
+            localStorage.setItem('saved_login_username', username);
+        } else {
+            localStorage.removeItem('saved_login_username');
+        }
+});
+        // 2. 监听表单提交事件
+        loginForm.addEventListener('submit', async function(e) {
+            // 阻止表单默认提交（避免页面刷新）
+            e.preventDefault();
+
+            // 3. 获取并格式化输入数据
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            // 4. 前端非空校验（可选，减轻后端压力）
+            if (!username) {
+                alert('请输入账号！');
+                return;
+            }
+            if (!password) {
+                alert('请输入密码！');
+                return;
+            }
+
+            try {
+                // 5. 第一步POST请求：验证账号密码（查询数据库匹配）
+                const verifyResponse = await fetch('/api/verify-user', { // 后端验证接口地址
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json', // 声明JSON格式
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                // 判断验证请求是否成功（HTTP状态码200-299）
+                if (!verifyResponse.ok) {
+                    throw new Error(`验证请求失败：${verifyResponse.status}`);
+                }
+
+                // 解析后端返回的验证结果
+                const verifyResult = await verifyResponse.json();
+                console.log('验证结果：', verifyResult);
+
+                // 6. 账号密码匹配判断（后端返回success: true 表示匹配）
+                if (verifyResult.success) {
+                    // 7. 验证通过：发送对应的业务POST请求（按需自定义）
+                    try {
+                        // 业务POST请求数据（可携带用户信息等）
+                        const businessData = {
+                            userId: verifyResult.userId, // 后端返回的用户ID
+                            username: username,
+                            loginTime: new Date().toLocaleString() // 登录时间
+                        };
+
+
+                        // 8. 业务请求完成后，跳转至主页面（两种跳转方式可选）
+                        // 方式1：普通跳转（可回退）
+                        window.location.href = '/dataview'; // 你的主页面地址
+                        // 方式2：替换历史记录（不可回退，更安全）
+                        // window.location.replace('/main.html');
+
+                    } catch (businessError) {
+                        // 业务POST请求失败提示
+                        console.error('业务请求异常：', businessError);
+                        alert('登录成功，但业务初始化失败，请重试！');
+                    }
+
+                } else {
+                    // 账号密码不匹配提示
+                    alert(verifyResult.message || '账号或密码错误，请重新输入！');
+                }
+
+            } catch (error) {
+                // 网络错误或验证请求异常提示
+                console.error('登录验证异常：', error);
+                alert('网络异常，请检查网络连接后重试！');
+            }
+        });
+    </script>
+</body>
+</html>

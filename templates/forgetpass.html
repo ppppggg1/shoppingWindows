@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>忘记密码 | 现代管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* 与登录/注册页完全一致的紫色渐变背景 */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .forgot-pwd-container {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 35px;
+            overflow: hidden;
+            /* 与登录/注册容器样式统一 */
+        }
+
+        .forgot-pwd-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .forgot-pwd-header h1 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            /* 与登录/注册页标题样式一致 */
+        }
+
+        .forgot-pwd-header p {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.5;
+            /* 与登录/注册页副标题样式一致 */
+        }
+
+        .forgot-pwd-form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            height: 52px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 16px 0 45px;
+            font-size: 15px;
+            color: #2d3748;
+            transition: all 0.3s ease;
+            outline: none;
+            /* 与登录/注册页输入框样式完全一致 */
+        }
+
+        .form-group input:focus {
+            /* 聚焦时同款紫色边框和阴影 */
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: #ffffff;
+        }
+
+        .form-group label {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0aec0;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus + label {
+            /* 聚焦时标签变为主题紫色 */
+            color: #667eea;
+        }
+
+        /* 验证码输入框布局（适配手机端） */
+        .verify-code-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .verify-code-group .form-group {
+            flex: 1;
+        }
+
+        .get-code-btn {
+            height: 52px;
+            padding: 0 16px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .get-code-btn:hover {
+            background: #f0f2ff;
+            border-color: #667eea;
+        }
+
+        .get-code-btn:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
+        }
+
+        .submit-btn {
+            height: 52px;
+            /* 同款紫色渐变按钮 */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 跳转链接样式 */
+        .link-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .link-group a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .link-group a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        /* 校验提示样式 */
+        .error-tip {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            padding-left: 45px;
+            display: none;
+        }
+
+        .input-error {
+            border-color: #dc3545 !important;
+        }
+
+        /* 响应式适配（与登录/注册页完全同步） */
+        @media (max-width: 480px) {
+            .forgot-pwd-container {
+                padding: 30px 25px;
+            }
+
+            .forgot-pwd-header h1 {
+                font-size: 24px;
+            }
+
+            .form-group input {
+                height: 48px;
+            }
+
+            .get-code-btn {
+                height: 48px;
+                padding: 0 12px;
+                font-size: 12px;
+            }
+
+            .submit-btn {
+                height: 48px;
+            }
+        }
+    </style>
+    <!-- 共用图标库，无需额外引入 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="forgot-pwd-container">
+        <!-- 忘记密码头部 -->
+        <div class="forgot-pwd-header">
+            <h1>找回密码</h1>
+            <p>请输入注册时的用户名和邮箱，获取验证码重置密码</p>
+        </div>
+
+        <!-- 忘记密码表单 -->
+        <form class="forgot-pwd-form" id="forgotPwdForm">
+            <!-- 用户名输入框 -->
+            <div class="form-group">
+                <input type="text" id="username" placeholder="请输入注册用户名/手机号" required>
+                <label for="username">
+                    <i class="fas fa-user"></i>
+                </label>
+                <div class="error-tip" id="usernameError">用户名不能为空</div>
+            </div>
+
+            <!-- 邮箱输入框 -->
+            <div class="form-group">
+                <input type="email" id="email" placeholder="请输入注册邮箱" required>
+                <label for="email">
+                    <i class="fas fa-envelope"></i>
+                </label>
+                <div class="error-tip" id="emailError">邮箱格式不正确或不能为空</div>
+            </div>
+
+            <!-- 验证码输入框 + 获取验证码按钮 -->
+            <div class="verify-code-group">
+                <div class="form-group">
+                    <input type="text" id="verifyCode" placeholder="请输入6位验证码" required>
+                    <label for="verifyCode">
+                        <i class="fas fa-shield-halved"></i>
+                    </label>
+                    <div class="error-tip" id="verifyCodeError">验证码不能为空且为6位</div>
+                </div>
+                <button type="button" class="get-code-btn" id="getCodeBtn">获取验证码</button>
+            </div>
+
+            <!-- 新密码输入框 -->
+            <div class="form-group">
+                <input type="password" id="newPassword" placeholder="请输入新密码" required>
+                <label for="newPassword">
+                    <i class="fas fa-lock"></i>
+                </label>
+                <div class="error-tip" id="newPasswordError">新密码长度不小于6位</div>
+            </div>
+
+            <!-- 确认新密码输入框 -->
+            <div class="form-group">
+                <input type="password" id="confirmNewPwd" placeholder="请确认新密码" required>
+                <label for="confirmNewPwd">
+                    <i class="fas fa-lock-open"></i>
+                </label>
+                <div class="error-tip" id="confirmNewPwdError">两次输入的密码不一致</div>
+            </div>
+
+            <!-- 提交按钮 -->
+            <button type="submit" class="submit-btn">重置密码</button>
+        </form>
+
+        <!-- 跳转链接（返回登录/去注册） -->
+        <div class="link-group">
+            <a href="./" target="_self">← 返回登录</a>
+            <a href="/signup" target="_self">还未注册？</a>
+        </div>
+    </div>
+
+    <script>
+        // 获取表单元素和提示元素
+        const forgotPwdForm = document.getElementById('forgotPwdForm');
+        const username = document.getElementById('username');
+        const email = document.getElementById('email');
+        const verifyCode = document.getElementById('verifyCode');
+        const newPassword = document.getElementById('newPassword');
+        const confirmNewPwd = document.getElementById('confirmNewPwd');
+        const getCodeBtn = document.getElementById('getCodeBtn');
+
+        const usernameError = document.getElementById('usernameError');
+        const emailError = document.getElementById('emailError');
+        const verifyCodeError = document.getElementById('verifyCodeError');
+        const newPasswordError = document.getElementById('newPasswordError');
+        const confirmNewPwdError = document.getElementById('confirmNewPwdError');
+
+        // 倒计时定时器
+        let countdownTimer = null;
+        const countdownSeconds = 60;
+
+        // 显示错误提示
+        function showError(el, tipEl) {
+            el.classList.add('input-error');
+            tipEl.style.display = 'block';
+        }
+
+        // 隐藏错误提示
+        function hideError(el, tipEl) {
+            el.classList.remove('input-error');
+            tipEl.style.display = 'none';
+        }
+
+        // 邮箱格式校验
+        function isEmailValid(emailVal) {
+            const reg = /^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+            return reg.test(emailVal);
+        }
+
+        // 获取验证码按钮点击事件
+        getCodeBtn.addEventListener('click', async function() {
+            const usernameVal = username.value.trim();
+            const emailVal = email.value.trim();
+
+            // 校验用户名和邮箱
+            let isValid = true;
+            if (!usernameVal) {
+                showError(username, usernameError);
+                isValid = false;
+            } else {
+                hideError(username, usernameError);
+            }
+
+            if (!emailVal || !isEmailValid(emailVal)) {
+                showError(email, emailError);
+                isValid = false;
+            } else {
+                hideError(email, emailError);
+            }
+
+            if (!isValid) {
+                return;
+            }
+
+            try {
+                // 发送获取验证码请求到后端
+                const response = await fetch('/api/get-verify-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: usernameVal,
+                        email: emailVal
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // 开启倒计时
+                    startCountdown();
+                    alert('验证码已发送至你的邮箱，请查收！');
+                } else {
+                    alert(result.message || '获取验证码失败，请重试');
+                }
+            } catch (error) {
+                console.error('获取验证码异常：', error);
+                alert('网络异常，请检查网络连接后重试');
+            }
+        });
+
+        // 倒计时逻辑
+        function startCountdown() {
+            let remainingSeconds = countdownSeconds;
+            // 禁用按钮
+            getCodeBtn.disabled = true;
+            getCodeBtn.innerText = `${remainingSeconds}s 后重新获取`;
+
+            // 启动定时器
+            countdownTimer = setInterval(() => {
+                remainingSeconds--;
+                if (remainingSeconds <= 0) {
+                    // 倒计时结束，恢复按钮
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                    getCodeBtn.disabled = false;
+                    getCodeBtn.innerText = '获取验证码';
+                } else {
+                    getCodeBtn.innerText = `${remainingSeconds}s 后重新获取`;
+                }
+            }, 1000);
+        }
+
+        // 表单提交事件
+        forgotPwdForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // 阻止默认刷新
+
+            // 获取输入值
+            const usernameVal = username.value.trim();
+            const emailVal = email.value.trim();
+            const verifyCodeVal = verifyCode.value.trim();
+            const newPasswordVal = newPassword.value.trim();
+            const confirmNewPwdVal = confirmNewPwd.value.trim();
+
+            let isValid = true;
+
+            // 1. 用户名校验
+            if (!usernameVal) {
+                showError(username, usernameError);
+                isValid = false;
+            } else {
+                hideError(username, usernameError);
+            }
+
+            // 2. 邮箱校验
+            if (!emailVal || !isEmailValid(emailVal)) {
+                showError(email, emailError);
+                isValid = false;
+            } else {
+                hideError(email, emailError);
+            }
+
+            // 3. 验证码校验
+            if (!verifyCodeVal || verifyCodeVal.length !== 6) {
+                showError(verifyCode, verifyCodeError);
+                isValid = false;
+            } else {
+                hideError(verifyCode, verifyCodeError);
+            }
+
+            // 4. 新密码校验
+            if (!newPasswordVal || newPasswordVal.length < 6) {
+                showError(newPassword, newPasswordError);
+                isValid = false;
+            } else {
+                hideError(newPassword, newPasswordError);
+            }
+
+            // 5. 确认新密码校验
+            if (confirmNewPwdVal !== newPasswordVal) {
+                showError(confirmNewPwd, confirmNewPwdError);
+                isValid = false;
+            } else {
+                hideError(confirmNewPwd, confirmNewPwdError);
+            }
+
+            // 前端校验不通过，终止提交
+            if (!isValid) {
+                return;
+            }
+
+            // 组装重置密码数据
+            const resetPwdData = {
+                username: usernameVal,
+                email: emailVal,
+                verifyCode: verifyCodeVal,
+                newPassword: newPasswordVal
+            };
+
+            try {
+                // 发送重置密码请求
+                const response = await fetch('/api/reset-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(resetPwdData)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('密码重置成功！即将跳转到登录页');
+                    window.location.href = './'; // 跳转回登录页
+                } else {
+                    alert(result.message || '密码重置失败，请重试');
+                }
+            } catch (error) {
+                console.error('重置密码异常：', error);
+                alert('网络异常，请检查网络连接后重试');
+            }
+        });
+
+        // 实时输入监听，移除错误提示
+        [username, email, verifyCode, newPassword, confirmNewPwd].forEach(input => {
+            input.addEventListener('input', function() {
+                const errorId = this.id + 'Error';
+                const errorTip = document.getElementById(errorId);
+                if (errorTip) {
+                    hideError(this, errorTip);
+                }
+            });
+        });
+
+        // 页面卸载时清除定时器，防止内存泄露
+        window.addEventListener('beforeunload', function() {
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+        });
+    </script>
+</body>
+</html>
