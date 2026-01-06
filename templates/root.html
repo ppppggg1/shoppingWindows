@@ -1,1127 +1,1663 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>学生成绩管理系统</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
-        }
-
-        body {
-            background-color: #f5f7fa;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* 侧边导航栏 */
-        .sidebar {
-            width: 200px;
-            background-color: #2f3e53;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding-top: 20px;
-            transition: width 0.3s ease;
-        }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 0 20px 20px;
-            border-bottom: 1px solid #3a4b63;
-        }
-
-        .sidebar-header i {
-            font-size: 24px;
-            color: #667eea;
-        }
-
-        .sidebar-header h2 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .sidebar-menu {
-            flex: 1;
-            padding: 20px 0;
-        }
-
-        .menu-item {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: background 0.3s;
-            font-size: 14px;
-            text-decoration: none;
-            color: #fff;
-            display: block;
-        }
-
-        .menu-item.active {
-            background-color: #165dff;
-            color: #fff;
-        }
-
-        .menu-item:hover:not(.active) {
-            background-color: #3a4b63;
-        }
-
-        .menu-item i {
-            width: 18px;
-            text-align: center;
-        }
-
-        .submenu {
-            padding-left: 40px;
-            background-color: #29384c;
-            display: none; /* 默认隐藏子菜单 */
-        }
-
-        .submenu .menu-item {
-            padding: 10px 20px;
-        }
-
-        /* 主内容区 */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow-y: auto;
-            transition: margin-left 0.3s ease;
-        }
-
-        /* 顶部导航栏 */
-        .topbar {
-            height: 60px;
-            background-color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .topbar-menu-btn {
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .topbar-title {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .topbar-notice {
-            font-size: 18px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .notice-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            width: 18px;
-            height: 18px;
-            background-color: #ff4d4f;
-            color: #fff;
-            border-radius: 50%;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .topbar-layout-btn {
-            font-size: 18px;
-            cursor: pointer;
-        }
-
-        .topbar-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-        }
-
-        .user-name {
-            font-size: 14px;
-        }
-
-        /* 欢迎栏 */
-        .welcome-bar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #fff;
-            padding: 20px 30px;
-            margin: 20px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .welcome-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .welcome-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            background-color: rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .welcome-text h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .welcome-text p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .welcome-time {
-            text-align: right;
-        }
-
-        .time-clock {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .time-date {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .time-weather {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-top: 5px;
-        }
-
-        /* 数据卡片区 */
-        .data-cards {
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .data-card {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        .data-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #fff;
-        }
-
-        .icon-purple {
-            background-color: #9c27b0;
-        }
-
-        .icon-pink {
-            background-color: #e91e63;
-        }
-
-        .icon-blue {
-            background-color: #2196f3;
-        }
-
-        .icon-green {
-            background-color: #4caf50;
-        }
-
-        .card-data h4 {
-            font-size: 24px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .card-data p {
-            font-size: 14px;
-            color: #999;
-            margin-top: 5px;
-        }
-
-        /* 图表区 */
-        .charts-area {
-            padding: 0 20px 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .chart-card {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        .chart-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .chart-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .chart-container {
-            height: 250px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        /* 成绩分布饼图 */
-        .score-pie {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: conic-gradient(
-                #2196f3 0% 20%,
-                #4caf50 20% 60%,
-                #ffc107 60% 75%,
-                #ff5722 75% 85%,
-                #f44336 85% 100%
-            );
-            position: relative;
-        }
-
-        .pie-center {
-            position: absolute;
-            top: 25px;
-            left: 25px;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background-color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pie-label {
-            position: absolute;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .label-excellent {
-            top: 30px;
-            right: 10px;
-        }
-
-        .label-good {
-            bottom: 20px;
-            left: 50px;
-        }
-
-        .label-medium {
-            top: 80px;
-            left: 10px;
-        }
-
-        .label-pass {
-            top: 120px;
-            right: 50px;
-        }
-
-        .label-fail {
-            bottom: 50px;
-            right: 20px;
-        }
-
-        .score-legend {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-        }
-
-        /* 班级优秀率柱状图 */
-        .class-bar {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            gap: 10px;
-            padding: 0 20px;
-        }
-
-        .bar-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            height: 25px;
-        }
-
-        .bar-label {
-            width: 120px;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .bar-container {
-            flex: 1;
-            height: 100%;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            background-color: #2196f3;
-            border-radius: 4px;
-        }
-
-        .bar-percent {
-            width: 50px;
-            font-size: 12px;
-            color: #666;
-            text-align: right;
-        }
-
-        /* 内容容器（用于动态替换） */
-        .content-wrapper {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 20px;
-        }
-
-        /* 其他页面内容的占位样式 */
-        .page-content {
-            padding: 20px;
-        }
-
-        .page-title {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .page-desc {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 20px;
-            line-height: 1.8;
-        }
-    </style>
-    <!-- 引入图标库 -->
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>淘宝广告点击量大数据分析系统</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background-color: #0f1a2f;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    /* 侧边导航栏 */
+    .sidebar {
+      width: 200px;
+      background-color: #1a243f;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding-top: 20px;
+      transition: width 0.3s ease;
+      border-right: 1px solid #2a3655;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid #2a3655;
+    }
+
+    .sidebar-header i {
+      font-size: 24px;
+      color: #00a1ff;
+    }
+
+    .sidebar-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #00a1ff;
+    }
+
+    .sidebar-menu {
+      flex: 1;
+      padding: 20px 0;
+    }
+
+    .menu-item {
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+      text-decoration: none;
+      color: #b8c2d9;
+      display: block;
+      border-left: 3px solid transparent;
+      position: relative;
+    }
+
+    /* 折叠菜单的箭头样式 */
+    .menu-item.has-submenu::after {
+      content: "\f078";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      font-size: 10px;
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: transform 0.3s ease;
+      color: #b8c2d9;
+    }
+
+    .menu-item.has-submenu.collapsed::after {
+      transform: translateY(-50%) rotate(-90deg);
+    }
+
+    .menu-item.active {
+      background-color: rgba(0, 161, 255, 0.1);
+      color: #00a1ff;
+      border-left-color: #00a1ff;
+    }
+
+    .menu-item:hover:not(.active) {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    .menu-item i {
+      width: 18px;
+      text-align: center;
+    }
+
+    .submenu {
+      padding-left: 40px;
+      background-color: #151e35;
+      display: none; /* 默认隐藏 */
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .submenu.show {
+      display: block;
+      max-height: 500px; /* 足够大的高度容纳子菜单 */
+    }
+
+    .submenu .menu-item {
+      padding: 10px 20px;
+      font-size: 13px;
+    }
+
+    /* 主内容区 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+      transition: margin-left 0.3s ease;
+    }
+
+    /* 顶部导航栏 */
+    .topbar {
+      height: 60px;
+      background-color: #1a243f;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid #2a3655;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .topbar-menu-btn {
+      font-size: 18px;
+      cursor: pointer;
+      color: #b8c2d9;
+    }
+
+    .topbar-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #00a1ff;
+    }
+
+    /* 欢迎栏 */
+    .welcome-bar {
+      background: linear-gradient(135deg, #0f1a2f 0%, #1a2b4f 100%);
+      color: #fff;
+      padding: 30px 40px;
+      margin: 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #2a3655;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .welcome-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .welcome-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #00a1ff 0%, #0080ff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 5px 15px rgba(0, 161, 255, 0.3);
+    }
+
+    .welcome-text h3 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #00a1ff, #00ffaa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .welcome-text p {
+      font-size: 16px;
+      color: #b8c2d9;
+      line-height: 1.6;
+    }
+
+    .welcome-time {
+      text-align: right;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 15px 25px;
+      border-radius: 8px;
+      border: 1px solid #2a3655;
+    }
+
+    .time-clock {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #00ffaa;
+      font-family: 'Courier New', monospace;
+    }
+
+    .time-date {
+      font-size: 16px;
+      color: #b8c2d9;
+    }
+
+    /* 数据卡片区 */
+    .data-cards {
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .data-card {
+      background: linear-gradient(135deg, #1a243f 0%, #223056 100%);
+      border-radius: 12px;
+      padding: 25px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 1px solid #2a3655;
+    }
+
+    .data-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 161, 255, 0.2);
+      border-color: #00a1ff;
+    }
+
+    .card-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #fff;
+    }
+
+    .icon-purple {
+      background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
+    }
+
+    .icon-pink {
+      background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+    }
+
+    .icon-blue {
+      background: linear-gradient(135deg, #2196f3 0%, #0d47a1 100%);
+    }
+
+    .icon-green {
+      background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    }
+
+    .icon-orange {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    }
+
+    .icon-teal {
+      background: linear-gradient(135deg, #009688 0%, #00695c 100%);
+    }
+
+    .card-data h4 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    .card-data p {
+      font-size: 14px;
+      color: #b8c2d9;
+    }
+
+    /* 大屏展示区 */
+    .dashboard-area {
+      padding: 0 20px 30px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .dashboard-card {
+      background: linear-gradient(135deg, #1a243f 0%, #223056 100%);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      border: 1px solid #2a3655;
+      transition: all 0.3s ease;
+    }
+
+    .dashboard-card:hover {
+      box-shadow: 0 15px 35px rgba(0, 161, 255, 0.15);
+    }
+
+    .dashboard-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #00a1ff;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #2a3655;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dashboard-title i {
+      font-size: 20px;
+    }
+
+    .chart-container {
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      width: 100%;
+    }
+
+    /* 加载中样式 */
+    .loading {
+      text-align: center;
+      color: #b8c2d9;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading i {
+      font-size: 40px;
+      margin-bottom: 15px;
+      color: #00a1ff;
+      animation: spin 1.5s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 内容容器 */
+    .content-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 20px;
+    }
+
+    /* 其他页面样式 */
+    .page-content {
+      padding: 30px;
+      width: 100%;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #00a1ff;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .page-desc {
+      font-size: 16px;
+      color: #b8c2d9;
+      margin-bottom: 30px;
+      line-height: 1.8;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #2a3655;
+    }
+
+    /* 详情页面样式 */
+    .detail-section {
+      background: linear-gradient(135deg, #1a243f 0%, #223056 100%);
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 20px;
+      border: 1px solid #2a3655;
+    }
+
+    .detail-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #00ffaa;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #2a3655;
+    }
+
+    .detail-content {
+      color: #b8c2d9;
+      line-height: 1.8;
+    }
+
+    .detail-item {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+    }
+
+    .detail-item strong {
+      color: #00a1ff;
+      margin-right: 10px;
+    }
+
+    /* 图表容器强制样式 */
+    #behaviorChart, #trendChart, #convertChart {
+      width: 100% !important;
+      height: 400px !important;
+      min-height: 400px !important;
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 1200px) {
+      .data-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .dashboard-area {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .data-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .welcome-bar {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+      }
+
+      .welcome-time {
+        text-align: center;
+      }
+    }
+  </style>
+  <!-- 引入图标库 -->
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- 改用稳定CDN引入ECharts -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
 </head>
+
 <body>
-    <!-- 侧边导航栏（固定，不刷新） -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-graduation-cap"></i>
-            <h2>成绩管理系统</h2>
+  <!-- 侧边导航栏 -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-chart-line"></i>
+      <h2>广告数据分析</h2>
+    </div>
+    <div class="sidebar-menu">
+      <!-- 系统首页 -->
+      <div class="menu-item" data-route="/index">
+        <i class="fas fa-home"></i>
+        <span>系统首页</span>
+      </div>
+      <!-- 需求1：广告点击率随时间变化趋势分析 -->
+      <div class="menu-item" data-route="/requirement1">
+        <i class="fas fa-clock"></i>
+        <span>点击率时间趋势</span>
+      </div>
+      <!-- 需求2：用户点击行为分布分析 -->
+      <div class="menu-item" data-route="/requirement2">
+        <i class="fas fa-chart-pie"></i>
+        <span>用户行为分布</span>
+      </div>
+      <!-- 需求3：用户消费档次与点击率关系分析 -->
+      <div class="menu-item" data-route="/requirement3">
+        <i class="fas fa-money-bill-wave"></i>
+        <span>消费档次分析</span>
+      </div>
+      <!-- 需求4：不同城市层级广告点击偏好分析 -->
+      <div class="menu-item" data-route="/requirement4">
+        <i class="fas fa-city"></i>
+        <span>城市层级偏好</span>
+      </div>
+      <!-- 需求5：购物深度用户价值分析（可折叠） -->
+      <div class="menu-item has-submenu" id="shoppingLevelParent">
+        <i class="fas fa-shopping-cart"></i>
+        <span>购物深度分析</span>
+      </div>
+      <!-- 新增：购物深度子菜单（可收缩） -->
+      <div class="submenu" id="shoppingLevelSubmenu">
+        <div class="menu-item" data-route="/shoppingLevel/behavior">
+          <i class="fas fa-list"></i>
+          <span>购物深度-行为分布</span>
         </div>
-        <div class="sidebar-menu">
-            <!-- 系统首页（Hash路由：#/index） -->
-            <div class="menu-item" data-route="/index">
-                <i class="fas fa-home"></i>
-                <span>系统首页</span>
-            </div>
-            <!-- 成绩管理（Hash路由：#/score） -->
-            <div class="menu-item" data-route="/score">
-                <i class="fas fa-clipboard-list"></i>
-                <span>成绩管理</span>
-            </div>
-            <!-- 课程管理（Hash路由：#/course） -->
-            <div class="menu-item" data-route="/course">
-                <i class="fas fa-book"></i>
-                <span>课程管理</span>
-            </div>
-            <!-- 班级管理（Hash路由：#/class） -->
-            <div class="menu-item" data-route="/class">
-                <i class="fas fa-users"></i>
-                <span>班级管理</span>
-            </div>
-            <!-- 教师管理（Hash路由：#/teacher） -->
-            <div class="menu-item" data-route="/teacher">
-                <i class="fas fa-chalkboard-teacher"></i>
-                <span>教师管理</span>
-            </div>
-            <!-- 统计分析（父菜单，展开子菜单） -->
-            <div class="menu-item" id="statisticMenu">
-                <i class="fas fa-chart-pie"></i>
-                <span>统计分析</span>
-            </div>
-            <div class="submenu" id="statisticSubmenu">
-                <!-- 成绩分析（Hash路由：#/score-analysis） -->
-                <div class="menu-item" data-route="/score-analysis">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>成绩分析</span>
-                </div>
-                <!-- 班级对比（Hash路由：#/class-compare） -->
-                <div class="menu-item" data-route="/class-compare">
-                    <i class="fas fa-table"></i>
-                    <span>班级对比</span>
-                </div>
-                <!-- 课程趋势（Hash路由：#/course-trend） -->
-                <div class="menu-item" data-route="/course-trend">
-                    <i class="fas fa-line-chart"></i>
-                    <span>课程趋势</span>
-                </div>
-                <!-- 薄弱点分析（Hash路由：#/weak-point） -->
-                <div class="menu-item" data-route="/weak-point">
-                    <i class="fas fa-search-minus"></i>
-                    <span>薄弱点分析</span>
-                </div>
-            </div>
-            <!-- 系统管理（Hash路由：#/system） -->
-            <div class="menu-item" data-route="/system">
-                <i class="fas fa-cog"></i>
-                <span>系统管理</span>
-            </div>
+        <div class="menu-item" data-route="/shoppingLevel/trend">
+          <i class="fas fa-chart-line"></i>
+          <span>购物深度-时间趋势</span>
         </div>
+        <div class="menu-item" data-route="/shoppingLevel/convert">
+          <i class="fas fa-percentage"></i>
+          <span>购物深度-转化率</span>
+        </div>
+      </div>
+      <!-- 详情分析 -->
+      <div class="menu-item" data-route="/detail">
+        <i class="fas fa-info-circle"></i>
+        <span>详情分析</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="main-content">
+    <!-- 顶部导航栏 -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-menu-btn" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </div>
+        <div class="topbar-title" id="currentPageTitle">淘宝广告点击量大数据分析</div>
+      </div>
     </div>
 
-    <!-- 主内容区（动态替换内容） -->
-    <div class="main-content">
-        <!-- 顶部导航栏（固定，不刷新） -->
-        <div class="topbar">
-            <div class="topbar-left">
-                <div class="topbar-menu-btn" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </div>
-                <div class="topbar-title" id="currentPageTitle">首页</div>
+    <!-- 内容容器 -->
+    <div class="content-wrapper" id="contentWrapper">
+      <!-- 初始内容：系统首页 -->
+      <div class="welcome-bar">
+        <div class="welcome-info">
+          <div class="welcome-avatar">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <div class="welcome-text">
+            <h3>淘宝广告点击量大数据分析系统</h3>
+            <p>实时监控淘宝广告点击数据，深度分析用户行为模式<br>
+              基于大数据技术实现精准营销决策支持<br>
+              <span style="font-size: 14px; color: #00ffaa;">数据来源：淘宝广告系统 | 更新时间：实时</span>
+            </p>
+          </div>
+        </div>
+        <div class="welcome-time">
+          <div class="time-clock">00:34:05</div>
+          <div class="time-date">2025年12月5日 星期五</div>
+          <div class="time-weather">📊 数据运行正常</div>
+        </div>
+      </div>
+
+      <div class="data-cards">
+        <div class="data-card" data-route="/requirement1">
+          <div class="card-icon icon-purple">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="card-data">
+            <h4>2.34%</h4>
+            <p>平均点击率</p>
+          </div>
+        </div>
+        <div class="data-card" data-route="/requirement2">
+          <div class="card-icon icon-pink">
+            <i class="fas fa-mouse-pointer"></i>
+          </div>
+          <div class="card-data">
+            <h4>8.7M</h4>
+            <p>日点击量</p>
+          </div>
+        </div>
+        <div class="data-card" data-route="/requirement3">
+          <div class="card-icon icon-blue">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="card-data">
+            <h4>156K</h4>
+            <p>活跃用户数</p>
+          </div>
+        </div>
+        <div class="data-card" data-route="/requirement4">
+          <div class="card-icon icon-green">
+            <i class="fas fa-map-marker-alt"></i>
+          </div>
+          <div class="card-data">
+            <h4>32</h4>
+            <p>覆盖城市数</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 大屏展示区 -->
+      <div class="dashboard-area">
+        <div class="dashboard-card">
+          <div class="dashboard-title">
+            <i class="fas fa-chart-line"></i>
+            <span>实时点击趋势监控</span>
+          </div>
+          <div class="chart-container">
+            <div style="text-align: center; color: #b8c2d9;">
+              <i class="fas fa-chart-line" style="font-size: 60px; margin-bottom: 20px; color: #00a1ff;"></i>
+              <p>实时数据可视化展示</p>
+              <p style="font-size: 14px; margin-top: 10px;">每小时更新一次</p>
             </div>
-            <div class="topbar-right">
-                <div class="topbar-notice" id="noticeBtn">
-                    <i class="fas fa-bell"></i>
-                    <div class="notice-badge">3</div>
-                </div>
-                <div class="topbar-layout-btn" id="layoutBtn">
-                    <i class="fas fa-th"></i>
-                </div>
-                <div class="topbar-user" id="userBtn">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-name">系统管理员</div>
-                    <i class="fas fa-angle-down"></i>
-                </div>
-            </div>
+          </div>
         </div>
 
-        <!-- 内容容器（动态替换部分） -->
-        <div class="content-wrapper" id="contentWrapper">
-            <!-- 初始内容：系统首页 -->
-            <div class="welcome-bar">
-                <div class="welcome-info">
-                    <div class="welcome-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="welcome-text">
-                        <h3>夜深了，注意休息，系统管理员！欢迎使用学生成绩管理系统</h3>
-                        <p>今天是个美好的一天，让我们开始工作吧！<br>
-                        <span style="font-size: 12px; opacity: 0.8;">系统管理员 | 上次登录：2024-12-05 09:30:00</span>
-                        </p>
-                    </div>
-                </div>
-                <div class="welcome-time">
-                    <div class="time-clock">00:34:05</div>
-                    <div class="time-date">2025年12月5日 星期五</div>
-                    <div class="time-weather">☀ 晴朗 22℃</div>
-                </div>
+        <div class="dashboard-card">
+          <div class="dashboard-title">
+            <i class="fas fa-chart-pie"></i>
+            <span>用户行为分布</span>
+          </div>
+          <div class="chart-container">
+            <div style="text-align: center; color: #b8c2d9;">
+              <i class="fas fa-pie-chart" style="font-size: 60px; margin-bottom: 20px; color: #00ffaa;"></i>
+              <p>点击/未点击分布比例</p>
+              <p style="font-size: 14px; margin-top: 10px;">实时统计数据</p>
             </div>
-
-            <div class="data-cards">
-                <div class="data-card" data-route="/student">
-                    <div class="card-icon icon-purple">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <div class="card-data">
-                        <h4>10</h4>
-                        <p>学生总数</p>
-                    </div>
-                </div>
-                <div class="data-card" data-route="/teacher">
-                    <div class="card-icon icon-pink">
-                        <i class="fas fa-chalkboard-teacher"></i>
-                    </div>
-                    <div class="card-data">
-                        <h4>5</h4>
-                        <p>教师总数</p>
-                    </div>
-                </div>
-                <div class="data-card" data-route="/course">
-                    <div class="card-icon icon-blue">
-                        <i class="fas fa-book-open"></i>
-                    </div>
-                    <div class="card-data">
-                        <h4>8</h4>
-                        <p>课程总数</p>
-                    </div>
-                </div>
-                <div class="data-card" data-route="/class">
-                    <div class="card-icon icon-green">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <div class="card-data">
-                        <h4>6</h4>
-                        <p>班级总数</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="charts-area">
-                <div class="chart-card" data-route="/score-analysis">
-                    <div class="chart-title">成绩分布统计</div>
-                    <div class="chart-container">
-                        <div class="score-pie">
-                            <div class="pie-center"></div>
-                            <div class="pie-label label-excellent">优秀(90-100)</div>
-                            <div class="pie-label label-good">良好(80-89)</div>
-                            <div class="pie-label label-medium">中等(70-79)</div>
-                            <div class="pie-label label-pass">及格(60-69)</div>
-                            <div class="pie-label label-fail">不及格(0-59)</div>
-                        </div>
-                        <div class="score-legend">
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #2196f3;"></div>
-                                <span>优秀(90-100)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #4caf50;"></div>
-                                <span>良好(80-89)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #ffc107;"></div>
-                                <span>中等(70-79)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #ff5722;"></div>
-                                <span>及格(60-69)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background-color: #f44336;"></div>
-                                <span>不及格(0-59)</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-card" data-route="/class-compare">
-                    <div class="chart-title">班级优秀率对比</div>
-                    <div class="chart-container">
-                        <div class="class-bar">
-                            <div class="bar-item">
-                                <div class="bar-label">软件工程2102班</div>
-                                <div class="bar-container">
-                                    <div class="bar-fill" style="width: 0%"></div>
-                                </div>
-                                <div class="bar-percent">0%</div>
-                            </div>
-                            <div class="bar-item">
-                                <div class="bar-label">软件工程2101班</div>
-                                <div class="bar-container">
-                                    <div class="bar-fill" style="width: 0%"></div>
-                                </div>
-                                <div class="bar-percent">0%</div>
-                            </div>
-                            <div class="bar-item">
-                                <div class="bar-label">计算机科学与技术2102班</div>
-                                <div class="bar-container">
-                                    <div class="bar-fill" style="width: 0%"></div>
-                                </div>
-                                <div class="bar-percent">0%</div>
-                            </div>
-                            <div class="bar-item">
-                                <div class="bar-label">计算机科学与技术2101班</div>
-                                <div class="bar-container">
-                                    <div class="bar-fill" style="width: 33.33%"></div>
-                                </div>
-                                <div class="bar-percent">33.33%</div>
-                            </div>
-                            <div class="bar-item">
-                                <div class="bar-label">网络工程2101班</div>
-                                <div class="bar-container">
-                                    <div class="bar-fill" style="width: 100%"></div>
-                                </div>
-                                <div class="bar-percent">100%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // 实时更新时间
-        function updateTime() {
-            const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            const seconds = now.getSeconds().toString().padStart(2, '0');
-            document.querySelector('.time-clock').textContent = `${hours}:${minutes}:${seconds}`;
-        }
-        updateTime();
-        setInterval(updateTime, 1000);
+  <script>
+    // ========== 核心修复1：时间更新函数增强 ==========
+    function updateTime() {
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
 
-        // ===================== 无刷新跳转核心逻辑（前端Hash路由） =====================
-        // 1. 定义路由映射：路由路径 → 页面内容
-        const routes = {
-            // 系统首页
-            '/index': {
-                title: '首页',
-                content: `
-                    <div class="welcome-bar">
-                        <div class="welcome-info">
-                            <div class="welcome-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="welcome-text">
-                                <h3>夜深了，注意休息，系统管理员！欢迎使用学生成绩管理系统</h3>
-                                <p>今天是个美好的一天，让我们开始工作吧！<br>
-                                <span style="font-size: 12px; opacity: 0.8;">系统管理员 | 上次登录：2024-12-05 09:30:00</span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="welcome-time">
-                            <div class="time-clock">00:34:05</div>
-                            <div class="time-date">2025年12月5日 星期五</div>
-                            <div class="time-weather">☀ 晴朗 22℃</div>
-                        </div>
-                    </div>
-                    <div class="data-cards">
-                        <div class="data-card" data-route="/student">
-                            <div class="card-icon icon-purple">
-                                <i class="fas fa-user-graduate"></i>
-                            </div>
-                            <div class="card-data">
-                                <h4>10</h4>
-                                <p>学生总数</p>
-                            </div>
-                        </div>
-                        <div class="data-card" data-route="/teacher">
-                            <div class="card-icon icon-pink">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                            </div>
-                            <div class="card-data">
-                                <h4>5</h4>
-                                <p>教师总数</p>
-                            </div>
-                        </div>
-                        <div class="data-card" data-route="/course">
-                            <div class="card-icon icon-blue">
-                                <i class="fas fa-book-open"></i>
-                            </div>
-                            <div class="card-data">
-                                <h4>8</h4>
-                                <p>课程总数</p>
-                            </div>
-                        </div>
-                        <div class="data-card" data-route="/class">
-                            <div class="card-icon icon-green">
-                                <i class="fas fa-building"></i>
-                            </div>
-                            <div class="card-data">
-                                <h4>6</h4>
-                                <p>班级总数</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="charts-area">
-                        <div class="chart-card" data-route="/score-analysis">
-                            <div class="chart-title">成绩分布统计</div>
-                            <div class="chart-container">
-                                <div class="score-pie">
-                                    <div class="pie-center"></div>
-                                    <div class="pie-label label-excellent">优秀(90-100)</div>
-                                    <div class="pie-label label-good">良好(80-89)</div>
-                                    <div class="pie-label label-medium">中等(70-79)</div>
-                                    <div class="pie-label label-pass">及格(60-69)</div>
-                                    <div class="pie-label label-fail">不及格(0-59)</div>
-                                </div>
-                                <div class="score-legend">
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background-color: #2196f3;"></div>
-                                        <span>优秀(90-100)</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background-color: #4caf50;"></div>
-                                        <span>良好(80-89)</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background-color: #ffc107;"></div>
-                                        <span>中等(70-79)</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background-color: #ff5722;"></div>
-                                        <span>及格(60-69)</span>
-                                    </div>
-                                    <div class="legend-item">
-                                        <div class="legend-color" style="background-color: #f44336;"></div>
-                                        <span>不及格(0-59)</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="chart-card" data-route="/class-compare">
-                            <div class="chart-title">班级优秀率对比</div>
-                            <div class="chart-container">
-                                <div class="class-bar">
-                                    <div class="bar-item">
-                                        <div class="bar-label">软件工程2102班</div>
-                                        <div class="bar-container">
-                                            <div class="bar-fill" style="width: 0%"></div>
-                                        </div>
-                                        <div class="bar-percent">0%</div>
-                                    </div>
-                                    <div class="bar-item">
-                                        <div class="bar-label">软件工程2101班</div>
-                                        <div class="bar-container">
-                                            <div class="bar-fill" style="width: 0%"></div>
-                                        </div>
-                                        <div class="bar-percent">0%</div>
-                                    </div>
-                                    <div class="bar-item">
-                                        <div class="bar-label">计算机科学与技术2102班</div>
-                                        <div class="bar-container">
-                                            <div class="bar-fill" style="width: 0%"></div>
-                                        </div>
-                                        <div class="bar-percent">0%</div>
-                                    </div>
-                                    <div class="bar-item">
-                                        <div class="bar-label">计算机科学与技术2101班</div>
-                                        <div class="bar-container">
-                                            <div class="bar-fill" style="width: 33.33%"></div>
-                                        </div>
-                                        <div class="bar-percent">33.33%</div>
-                                    </div>
-                                    <div class="bar-item">
-                                        <div class="bar-label">网络工程2101班</div>
-                                        <div class="bar-container">
-                                            <div class="bar-fill" style="width: 100%"></div>
-                                        </div>
-                                        <div class="bar-percent">100%</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            },
-            // 成绩管理页面
-            '/score': {
-                title: '成绩管理',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">成绩管理</h2>
-                        <p class="page-desc">这里是学生成绩管理页面，可进行成绩录入、修改、查询、导出等操作。</p>
-                        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <p>功能列表：</p>
-                            <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
-                                <li>批量导入成绩</li>
-                                <li>单个学生成绩录入</li>
-                                <li>成绩修改与删除</li>
-                                <li>成绩按班级/科目筛选</li>
-                                <li>成绩导出为Excel</li>
-                            </ul>
-                        </div>
-                    </div>
-                `
-            },
-            // 课程管理页面
-            '/course': {
-                title: '课程管理',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">课程管理</h2>
-                        <p class="page-desc">这里是课程管理页面，可进行课程的添加、修改、删除、分配教师等操作。</p>
-                        <div style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                            <p>当前课程列表：</p>
-                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-                                <thead>
-                                    <tr style="background: #f5f7fa;">
-                                        <th style="border: 1px solid #eee; padding: 10px; text-align: left;">课程ID</th>
-                                        <th style="border: 1px solid #eee; padding: 10px; text-align: left;">课程名称</th>
-                                        <th style="border: 1px solid #eee; padding: 10px; text-align: left;">授课教师</th>
-                                        <th style="border: 1px solid #eee; padding: 10px; text-align: left;">学分</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td style="border: 1px solid #eee; padding: 10px;">C001</td>
-                                        <td style="border: 1px solid #eee; padding: 10px;">Python程序设计</td>
-                                        <td style="border: 1px solid #eee; padding: 10px;">张老师</td>
-                                        <td style="border: 1px solid #eee; padding: 10px;">3</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="border: 1px solid #eee; padding: 10px;">C002</td>
-                                        <td style="border: 1px solid #eee; padding: 10px;">数据库原理</td>
-                                        <td style="border: 1px solid #eee; padding: 10px;">李老师</td>
-                                        <td style="border: 1px solid #eee; padding: 10px;">4</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `
-            },
-            // 班级管理页面
-            '/class': {
-                title: '班级管理',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">班级管理</h2>
-                        <p class="page-desc">这里是班级管理页面，可进行班级的创建、学生分配、班主任设置等操作。</p>
-                    </div>
-                `
-            },
-            // 教师管理页面
-            '/teacher': {
-                title: '教师管理',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">教师管理</h2>
-                        <p class="page-desc">这里是教师管理页面，可进行教师信息的添加、修改、删除等操作。</p>
-                    </div>
-                `
-            },
-            // 成绩分析页面
-            '/score-analysis': {
-                title: '成绩分析',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">成绩分析</h2>
-                        <p class="page-desc">这里是成绩分析页面，可查看各科目成绩分布、学生排名等详细数据。</p>
-                    </div>
-                `
-            },
-            // 班级对比页面
-            '/class-compare': {
-                title: '班级对比',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">班级对比</h2>
-                        <p class="page-desc">这里是班级对比页面，可对比不同班级的平均分、优秀率等指标。</p>
-                    </div>
-                `
-            },
-            // 课程趋势页面
-            '/course-trend': {
-                title: '课程趋势',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">课程趋势</h2>
-                        <p class="page-desc">这里是课程趋势页面，可查看各课程成绩的历年变化趋势。</p>
-                    </div>
-                `
-            },
-            // 薄弱点分析页面
-            '/weak-point': {
-                title: '薄弱点分析',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">薄弱点分析</h2>
-                        <p class="page-desc">这里是薄弱点分析页面，可识别学生的知识薄弱点并给出提升建议。</p>
-                    </div>
-                `
-            },
-            // 系统管理页面
-            '/system': {
-                title: '系统管理',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">系统管理</h2>
-                        <p class="page-desc">这里是系统管理页面，可进行用户权限设置、系统参数配置等操作。</p>
-                    </div>
-                `
-            },
-            // 学生管理页面（数据卡片跳转）
-            '/student': {
-                title: '学生管理',
-                content: `
-                    <div class="page-content">
-                        <h2 class="page-title">学生管理</h2>
-                        <p class="page-desc">这里是学生管理页面，可进行学生信息的添加、修改、删除等操作。</p>
-                    </div>
-                `
-            }
+      // 严格校验DOM元素存在性
+      const timeClock = document.querySelector('.time-clock');
+      if (timeClock) {
+        timeClock.textContent = `${hours}:${minutes}:${seconds}`;
+      }
+
+      // 更新日期
+      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      const dateStr = now.toLocaleDateString('zh-CN', options);
+      const timeDate = document.querySelector('.time-date');
+      if (timeDate) {
+        timeDate.textContent = dateStr;
+      }
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // ========== 核心修复2：接口请求与模拟数据优化 ==========
+    // 接口基础地址（请替换为你的真实后端接口地址）
+    const API_BASE_URL = 'http://localhost:5000/api';
+
+    // 通用接口请求函数（增加超时和错误兜底）
+    async function fetchApiData(url, method = 'GET', data = {}) {
+      try {
+        // 设置请求超时
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const options = {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
         };
 
-        // 2. 获取DOM元素
-        const contentWrapper = document.getElementById('contentWrapper');
-        const currentPageTitle = document.getElementById('currentPageTitle');
-        const menuItems = document.querySelectorAll('.menu-item[data-route]');
-        const statisticMenu = document.getElementById('statisticMenu');
-        const statisticSubmenu = document.getElementById('statisticSubmenu');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.querySelector('.sidebar');
-
-        // 3. 切换路由的核心函数
-        function navigateTo(route) {
-            // 1. 验证路由是否存在
-            if (!routes[route]) {
-                route = '/index'; // 不存在则跳转到首页
-            }
-
-            // 2. 更新URL的Hash值（保留历史记录）
-            window.location.hash = route;
-
-            // 3. 更新主内容区
-            contentWrapper.innerHTML = routes[route].content;
-
-            // 4. 更新页面标题
-            currentPageTitle.textContent = routes[route].title;
-
-            // 5. 更新菜单选中状态
-            menuItems.forEach(item => {
-                item.classList.toggle('active', item.dataset.route === route);
-            });
-
-            // 6. 为新内容中的可点击元素绑定路由（如数据卡片、图表）
-            bindContentRoutes();
+        if (method !== 'GET') {
+          options.body = JSON.stringify(data);
         }
 
-        // 4. 为内容中的可点击元素绑定路由（如数据卡片、图表）
-        function bindContentRoutes() {
-            const contentItems = contentWrapper.querySelectorAll('[data-route]');
-            contentItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const route = this.dataset.route;
-                    navigateTo(route);
-                });
-            });
+        const response = await fetch(`${API_BASE_URL}${url}`, options);
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`接口请求失败：${response.status}`);
         }
 
-        // 5. 监听Hash变化（用户手动修改URL时触发）
-        window.addEventListener('hashchange', function() {
-            const currentRoute = window.location.hash.slice(1) || '/index';
-            navigateTo(currentRoute);
-        });
+        const result = await response.json();
+        return result.code === 200 ? result.data : getMockData(url);
+      } catch (error) {
+        console.warn('接口请求失败，使用模拟数据：', error.message);
+        return getMockData(url);
+      }
+    }
 
-        // 6. 为菜单项目绑定点击事件
-        menuItems.forEach(item => {
-            item.addEventListener('click', function() {
-                const route = this.dataset.route;
-                navigateTo(route);
-            });
-        });
+    // 模拟数据（增强数据完整性）
+    function getMockData(url) {
+      switch(url) {
+        case '/shoppingLevel/behavior':
+          return {
+            xAxis: ['购物深度1', '购物深度2', '购物深度3'],
+            series: [
+              { name: '浏览(pv)', data: [12000, 8500, 6000] },
+              { name: '收藏(fav)', data: [2500, 3200, 4500] },
+              { name: '加购(cart)', data: [1800, 2800, 4200] },
+              { name: '购买(buy)', data: [800, 1500, 3000] }
+            ]
+          };
+        case '/shoppingLevel/trend':
+          return {
+            xAxis: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+            series: [
+              { name: '购物深度1', data: [350, 280, 800, 1200, 1500, 900] },
+              { name: '购物深度2', data: [420, 350, 950, 1500, 1800, 1100] },
+              { name: '购物深度3', data: [580, 480, 1200, 2000, 2500, 1800] }
+            ]
+          };
+        case '/shoppingLevel/convert':
+          return {
+            xAxis: ['购物深度1', '购物深度2', '购物深度3'],
+            series: [
+              { name: '点击转化率', data: [1.8, 2.5, 3.8] },
+              { name: '购买转化率', data: [0.6, 1.2, 2.5] }
+            ]
+          };
+        default:
+          return {};
+      }
+    }
 
-        // 7. 初始化页面（加载默认路由）
-        window.addEventListener('load', function() {
-            const initialRoute = window.location.hash.slice(1) || '/index';
-            navigateTo(initialRoute);
-            // 绑定内容中的路由
-            bindContentRoutes();
-        });
+    // ========== 核心修复3：图表渲染函数重构（解决容器不存在问题） ==========
+    // 通用图表初始化函数
+    function initChart(chartId) {
+      const chartDom = document.getElementById(chartId);
+      if (!chartDom) {
+        console.error(`图表容器不存在：${chartId}`);
+        return null;
+      }
+      // 强制设置容器尺寸
+      chartDom.style.width = '100%';
+      chartDom.style.height = '400px';
+      return echarts.init(chartDom);
+    }
 
-        // 8. 统计分析菜单展开/收起
-        statisticMenu.addEventListener('click', function() {
-            statisticSubmenu.style.display = statisticSubmenu.style.display === 'block' ? 'none' : 'block';
-        });
+    // 渲染行为分布图表
+    async function renderBehaviorChart() {
+      const chartContainer = document.querySelector('.chart-container');
+      // 显示加载状态
+      if (chartContainer) {
+        chartContainer.innerHTML = `
+          <div class="loading">
+            <i class="fas fa-spinner"></i>
+            <p>数据加载中...</p>
+          </div>
+        `;
+      }
 
-        // 9. 侧边栏收缩/展开
-        sidebarToggle.addEventListener('click', function() {
-            if (sidebar.style.width === '60px') {
-                sidebar.style.width = '200px';
-            } else {
-                sidebar.style.width = '60px';
+      try {
+        // 获取数据
+        const behaviorData = await fetchApiData('/shoppingLevel/behavior');
+        // 等待DOM完全渲染
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // 初始化图表
+        const myChart = initChart('behaviorChart');
+        if (!myChart) {
+          if (chartContainer) {
+            chartContainer.innerHTML = `
+              <div class="loading" style="color: #ff4444;">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>图表容器加载失败，请刷新页面</p>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        const option = {
+          backgroundColor: 'transparent',
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+            textStyle: { color: '#fff' }
+          },
+          legend: {
+            data: behaviorData.series.map(item => item.name),
+            textStyle: { color: '#b8c2d9' }
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: behaviorData.xAxis,
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' },
+            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } }
+          },
+          series: behaviorData.series.map(item => ({
+            name: item.name,
+            type: 'bar',
+            data: item.data,
+            itemStyle: { borderRadius: 4 }
+          }))
+        };
+
+        myChart.setOption(option);
+        // 监听窗口大小变化
+        window.addEventListener('resize', () => myChart.resize());
+      } catch (e) {
+        console.error('渲染行为分布图表失败：', e);
+        if (chartContainer) {
+          chartContainer.innerHTML = `
+            <div class="loading" style="color: #ff4444;">
+              <i class="fas fa-exclamation-circle"></i>
+              <p>图表加载失败：${e.message}</p>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // 渲染时间趋势图表
+    async function renderTrendChart() {
+      const chartContainer = document.querySelector('.chart-container');
+      if (chartContainer) {
+        chartContainer.innerHTML = `
+          <div class="loading">
+            <i class="fas fa-spinner"></i>
+            <p>数据加载中...</p>
+          </div>
+        `;
+      }
+
+      try {
+        const trendData = await fetchApiData('/shoppingLevel/trend');
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        const myChart = initChart('trendChart');
+        if (!myChart) {
+          if (chartContainer) {
+            chartContainer.innerHTML = `
+              <div class="loading" style="color: #ff4444;">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>图表容器加载失败，请刷新页面</p>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        const colors = ['#00a1ff', '#00ffaa', '#e91e63'];
+        const option = {
+          backgroundColor: 'transparent',
+          tooltip: { trigger: 'axis', textStyle: { color: '#fff' } },
+          legend: {
+            data: trendData.series.map(item => item.name),
+            textStyle: { color: '#b8c2d9' }
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: trendData.xAxis,
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' },
+            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } }
+          },
+          series: trendData.series.map((item, index) => ({
+            name: item.name,
+            type: 'line',
+            data: item.data,
+            smooth: true,
+            lineStyle: { width: 3, color: colors[index] },
+            itemStyle: { color: colors[index], borderRadius: 5 },
+            symbol: 'circle',
+            symbolSize: 8
+          }))
+        };
+
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+      } catch (e) {
+        console.error('渲染时间趋势图表失败：', e);
+        if (chartContainer) {
+          chartContainer.innerHTML = `
+            <div class="loading" style="color: #ff4444;">
+              <i class="fas fa-exclamation-circle"></i>
+              <p>图表加载失败：${e.message}</p>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // 渲染转化率图表
+    async function renderConvertChart() {
+      const chartContainer = document.querySelector('.chart-container');
+      if (chartContainer) {
+        chartContainer.innerHTML = `
+          <div class="loading">
+            <i class="fas fa-spinner"></i>
+            <p>数据加载中...</p>
+          </div>
+        `;
+      }
+
+      try {
+        const convertData = await fetchApiData('/shoppingLevel/convert');
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        const myChart = initChart('convertChart');
+        if (!myChart) {
+          if (chartContainer) {
+            chartContainer.innerHTML = `
+              <div class="loading" style="color: #ff4444;">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>图表容器加载失败，请刷新页面</p>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        const colors = ['#9c27b0', '#4caf50'];
+        const option = {
+          backgroundColor: 'transparent',
+          tooltip: {
+            trigger: 'axis',
+            textStyle: { color: '#fff' },
+            formatter: '{b}: {c}%'
+          },
+          legend: {
+            data: convertData.series.map(item => item.name),
+            textStyle: { color: '#b8c2d9' }
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: convertData.xAxis,
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9', formatter: '{value}%' },
+            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } },
+            min: 0,
+            max: 5
+          },
+          series: convertData.series.map((item, index) => ({
+            name: item.name,
+            type: 'bar',
+            data: item.data,
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: colors[index] },
+                { offset: 1, color: colors[index] + '80' }
+              ]),
+              borderRadius: 4
+            },
+            label: {
+              show: true,
+              position: 'top',
+              formatter: '{c}%',
+              color: '#fff'
             }
-        });
+          }))
+        };
 
-        // 10. 初始化子菜单状态
-        statisticSubmenu.style.display = 'none';
-    </script>
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+      } catch (e) {
+        console.error('渲染转化率图表失败：', e);
+        if (chartContainer) {
+          chartContainer.innerHTML = `
+            <div class="loading" style="color: #ff4444;">
+              <i class="fas fa-exclamation-circle"></i>
+              <p>图表加载失败：${e.message}</p>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // ========== 路由配置（保持原有结构） ==========
+    const routes = {
+      '/index': {
+        title: '淘宝广告点击量大数据分析',
+        content: `
+          <div class="welcome-bar">
+            <div class="welcome-info">
+              <div class="welcome-avatar">
+                <i class="fas fa-chart-bar"></i>
+              </div>
+              <div class="welcome-text">
+                <h3>淘宝广告点击量大数据分析系统</h3>
+                <p>实时监控淘宝广告点击数据，深度分析用户行为模式<br>
+                  基于大数据技术实现精准营销决策支持<br>
+                  <span style="font-size: 14px; color: #00ffaa;">数据来源：淘宝广告系统 | 更新时间：实时</span>
+                </p>
+              </div>
+            </div>
+            <div class="welcome-time">
+              <div class="time-clock">00:34:05</div>
+              <div class="time-date">2025年12月5日 星期五</div>
+              <div class="time-weather">📊 数据运行正常</div>
+            </div>
+          </div>
+
+          <div class="data-cards">
+            <div class="data-card" data-route="/requirement1">
+              <div class="card-icon icon-purple">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="card-data">
+                <h4>2.34%</h4>
+                <p>平均点击率</p>
+              </div>
+            </div>
+            <div class="data-card" data-route="/requirement2">
+              <div class="card-icon icon-pink">
+                <i class="fas fa-mouse-pointer"></i>
+              </div>
+              <div class="card-data">
+                <h4>8.7M</h4>
+                <p>日点击量</p>
+              </div>
+            </div>
+            <div class="data-card" data-route="/requirement3">
+              <div class="card-icon icon-blue">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="card-data">
+                <h4>156K</h4>
+                <p>活跃用户数</p>
+              </div>
+            </div>
+            <div class="data-card" data-route="/requirement4">
+              <div class="card-icon icon-green">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="card-data">
+                <h4>32</h4>
+                <p>覆盖城市数</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-area">
+            <div class="dashboard-card">
+              <div class="dashboard-title">
+                <i class="fas fa-chart-line"></i>
+                <span>实时点击趋势监控</span>
+              </div>
+              <div class="chart-container">
+                <div style="text-align: center; color: #b8c2d9;">
+                  <i class="fas fa-chart-line" style="font-size: 60px; margin-bottom: 20px; color: #00a1ff;"></i>
+                  <p>实时数据可视化展示</p>
+                  <p style="font-size: 14px; margin-top: 10px;">每小时更新一次</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="dashboard-title">
+                <i class="fas fa-chart-pie"></i>
+                <span>用户行为分布</span>
+              </div>
+              <div class="chart-container">
+                <div style="text-align: center; color: #b8c2d9;">
+                  <i class="fas fa-pie-chart" style="font-size: 60px; margin-bottom: 20px; color: #00ffaa;"></i>
+                  <p>点击/未点击分布比例</p>
+                  <p style="font-size: 14px; margin-top: 10px;">实时统计数据</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      '/requirement1': {
+        title: '点击率时间趋势分析',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-clock"></i>
+              广告点击率随时间变化趋势分析
+            </h2>
+            <p class="page-desc">
+              分析广告点击率在不同时间段的分布情况，识别点击高峰期和低谷期，为广告投放时间优化提供数据支持。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">📊 数据分析概览</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>特征值：</strong>时间、广告点击率
+                </div>
+                <div class="detail-item">
+                  <strong>数据库字段：</strong>raw_sample表中的time_stamp（时间戳）、clk（点击标识）
+                </div>
+                <div class="detail-item">
+                  <strong>处理算法：</strong>
+                  <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>数据加载：spark.read.parquet("hdfs://path/to/raw_sample")</li>
+                    <li>时间字段转换：提取小时（0-23）</li>
+                    <li>分组聚合：按小时分组统计展示次数和点击次数</li>
+                    <li>点击率计算：点击率 = (总点击次数 / 总展示次数) × 100</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-area">
+              <div class="dashboard-card">
+                <div class="dashboard-title">
+                  <i class="fas fa-chart-line"></i>
+                  <span>24小时点击率趋势</span>
+                </div>
+                <div class="chart-container">
+                  <div style="text-align: center; color: #b8c2d9;">
+                    <i class="fas fa-chart-line" style="font-size: 60px; margin-bottom: 20px; color: #9c27b0;"></i>
+                    <p>点击率随时间变化趋势图</p>
+                    <p style="font-size: 14px; margin-top: 10px;">高峰期：14:00-16:00</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-card">
+                <div class="dashboard-title">
+                  <i class="fas fa-table"></i>
+                  <span>数据统计表</span>
+                </div>
+                <div class="chart-container">
+                  <div style="width: 100%; padding: 20px;">
+                    <table style="width: 100%; border-collapse: collapse; color: #b8c2d9;">
+                      <thead>
+                        <tr style="background: rgba(0, 161, 255, 0.1);">
+                          <th style="padding: 10px; text-align: left;">时间段</th>
+                          <th style="padding: 10px; text-align: left;">展示次数</th>
+                          <th style="padding: 10px; text-align: left;">点击次数</th>
+                          <th style="padding: 10px; text-align: left;">点击率</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr style="border-bottom: 1px solid #2a3655;">
+                          <td style="padding: 10px;">00:00-01:00</td>
+                          <td style="padding: 10px;">125,432</td>
+                          <td style="padding: 10px;">2,891</td>
+                          <td style="padding: 10px; color: #4caf50;">2.31%</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #2a3655;">
+                          <td style="padding: 10px;">14:00-15:00</td>
+                          <td style="padding: 10px;">356,789</td>
+                          <td style="padding: 10px;">9,876</td>
+                          <td style="padding: 10px; color: #00ffaa;">2.77%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      '/requirement2': {
+        title: '用户行为分布分析',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-chart-pie"></i>
+              用户点击行为分布分析
+            </h2>
+            <p class="page-desc">
+              分析用户点击与未点击广告的整体分布情况，了解广告的整体点击表现和用户行为特征。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">📈 数据分布分析</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>特征值：</strong>点击、未点击
+                </div>
+                <div class="detail-item">
+                  <strong>数据库字段：</strong>raw_sample表中的clk（点击标识）
+                </div>
+                <div class="detail-item">
+                  <strong>处理算法：</strong>
+                  <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>整体统计：计算总展示次数和总点击次数</li>
+                    <li>分布计算：未点击次数 = 总展示次数 - 总点击次数</li>
+                    <li>点击率计算：全局点击率分析</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-area">
+              <div class="dashboard-card">
+                <div class="dashboard-title">
+                  <i class="fas fa-pie-chart"></i>
+                  <span>点击行为分布图</span>
+                </div>
+                <div class="chart-container">
+                  <div style="text-align: center; color: #b8c2d9;">
+                    <i class="fas fa-chart-pie" style="font-size: 80px; margin-bottom: 20px; color: #e91e63;"></i>
+                    <p>点击：2.34%</p>
+                    <p>未点击：97.66%</p>
+                    <p style="font-size: 14px; margin-top: 10px;">总展示次数：15,678,432</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      '/requirement3': {
+        title: '消费档次分析',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-money-bill-wave"></i>
+              用户消费档次与点击率关系分析
+            </h2>
+            <p class="page-desc">
+              分析不同消费档次用户的广告点击行为差异，为精准营销和用户分层运营提供数据依据。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">💰 消费档次分析</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>特征值：</strong>消费档次、点击率
+                </div>
+                <div class="detail-item">
+                  <strong>数据库字段：</strong>user_profile表的pvalue_level、raw_sample表的clk
+                </div>
+                <div class="detail-item">
+                  <strong>处理算法：</strong>
+                  <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>数据关联：user_profile和raw_sample表连接</li>
+                    <li>分组统计：按消费档次分组</li>
+                    <li>点击率计算：各档次点击率分析</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      '/requirement4': {
+        title: '城市层级偏好分析',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-city"></i>
+              不同城市层级广告点击偏好分析
+            </h2>
+            <p class="page-desc">
+              分析不同城市层级用户对广告品牌/品类的点击偏好，为地域化广告投放策略提供数据支持。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">🏙️ 城市层级分析</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>特征值：</strong>城市层级、品牌/品类、点击率
+                </div>
+                <div class="detail-item">
+                  <strong>数据库字段：</strong>user_profile表的new_user_class_level、ad_feature表的brand/cate_id
+                </div>
+                <div class="detail-item">
+                  <strong>处理算法：</strong>
+                  <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>三表关联：user_profile、raw_sample、ad_feature</li>
+                    <li>分组聚合：按城市层级和品牌/品类分组</li>
+                    <li>Top 3筛选：各城市层级点击率前三名</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      '/requirement5': {
+        title: '购物深度分析',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-shopping-cart"></i>
+              购物深度用户价值分析
+            </h2>
+            <p class="page-desc">
+              分析不同购物深度用户的行为特征、转化率和LTV（用户生命周期价值），为精细化用户运营提供决策依据。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">🛒 购物深度分析</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>特征值：</strong>购物深度、活跃度、转化率、LTV
+                </div>
+                <div class="detail-item">
+                  <strong>数据库字段：</strong>user_profile表的shopping_level、behavior_log表的btag
+                </div>
+                <div class="detail-item">
+                  <strong>处理算法：</strong>
+                  <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>三表关联：user_profile、behavior_log、raw_sample</li>
+                    <li>指标计算：活跃度、转化率、LTV等关键指标</li>
+                    <li>分层分析：按购物深度进行用户分层</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      '/shoppingLevel/behavior': {
+        title: '购物深度-行为分布',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-list"></i>
+              购物深度-用户行为分布分析
+            </h2>
+            <p class="page-desc">
+              分析不同购物深度用户的行为分布（浏览、收藏、加购、购买），识别高价值用户的行为特征。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">📊 数据说明</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>数据来源：</strong>后端接口 /api/shoppingLevel/behavior
+                </div>
+                <div class="detail-item">
+                  <strong>统计维度：</strong>按购物深度分层，统计各行为类型的用户数
+                </div>
+                <div class="detail-item">
+                  <strong>核心结论：</strong>购物深度越高，购买转化行为占比越高
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-area">
+              <div class="dashboard-card" style="grid-column: span 2;">
+                <div class="dashboard-title">
+                  <i class="fas fa-chart-bar"></i>
+                  <span>不同购物深度用户行为分布</span>
+                </div>
+                <div class="chart-container">
+                  <div id="behaviorChart"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `,
+        afterRender: renderBehaviorChart
+      },
+      '/shoppingLevel/trend': {
+        title: '购物深度-时间趋势',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-chart-line"></i>
+              购物深度-用户活跃时间趋势
+            </h2>
+            <p class="page-desc">
+              分析不同购物深度用户在一天内的活跃时间趋势，为分时段精准营销提供数据支持。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">📈 数据说明</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>数据来源：</strong>后端接口 /api/shoppingLevel/trend
+                </div>
+                <div class="detail-item">
+                  <strong>统计维度：</strong>按小时统计不同购物深度用户的活跃次数
+                </div>
+                <div class="detail-item">
+                  <strong>核心结论：</strong>高购物深度用户在16:00-20:00活跃度最高
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-area">
+              <div class="dashboard-card" style="grid-column: span 2;">
+                <div class="dashboard-title">
+                  <i class="fas fa-chart-line"></i>
+                  <span>不同购物深度用户活跃时间趋势</span>
+                </div>
+                <div class="chart-container">
+                  <div id="trendChart"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `,
+        afterRender: renderTrendChart
+      },
+      '/shoppingLevel/convert': {
+        title: '购物深度-转化率分析',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-percentage"></i>
+              购物深度-用户转化率分析
+            </h2>
+            <p class="page-desc">
+              分析不同购物深度用户的点击转化率和购买转化率，评估不同层级用户的商业价值。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">🎯 数据说明</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>数据来源：</strong>后端接口 /api/shoppingLevel/convert
+                </div>
+                <div class="detail-item">
+                  <strong>统计维度：</strong>按购物深度分层，计算点击/购买转化率
+                </div>
+                <div class="detail-item">
+                  <strong>核心结论：</strong>购物深度3级用户的购买转化率是1级用户的4倍+
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-area">
+              <div class="dashboard-card" style="grid-column: span 2;">
+                <div class="dashboard-title">
+                  <i class="fas fa-chart-bar"></i>
+                  <span>不同购物深度用户转化率对比</span>
+                </div>
+                <div class="chart-container">
+                  <div id="convertChart"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `,
+        afterRender: renderConvertChart
+      },
+      '/detail': {
+        title: '详情分析报告',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-file-alt"></i>
+              广告数据分析详情报告
+            </h2>
+            <p class="page-desc">
+              本报告基于淘宝广告点击大数据，从五个维度深度分析用户行为特征和广告表现，为营销决策提供全面数据支持。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">📋 分析项目概览</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>1. 时间趋势分析：</strong>识别广告点击的高峰期和低谷期，优化投放时间策略
+                </div>
+                <div class="detail-item">
+                  <strong>2. 行为分布分析：</strong>了解整体点击率表现，评估广告效果
+                </div>
+                <div class="detail-item">
+                  <strong>3. 消费档次分析：</strong>识别不同消费能力用户的点击偏好
+                </div>
+                <div class="detail-item">
+                  <strong>4. 城市层级分析：</strong>分析地域差异对广告效果的影响
+                </div>
+                <div class="detail-item">
+                  <strong>5. 购物深度分析：</strong>评估不同用户群体的长期价值
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <div class="detail-title">🎯 关键发现</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>最佳投放时间：</strong>14:00-16:00为点击高峰期，点击率达2.77%
+                </div>
+                <div class="detail-item">
+                  <strong>高价值用户群体：</strong>消费档次高的用户点击率显著高于普通用户
+                </div>
+                <div class="detail-item">
+                  <strong>地域差异：</strong>一线城市用户对品牌广告接受度更高
+                </div>
+                <div class="detail-item">
+                  <strong>深度用户价值：</strong>购物深度3级用户的LTV是浅层用户的3倍
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <div class="detail-title">💡 优化建议</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  1. 在14:00-16:00高峰期增加广告投放预算
+                </div>
+                <div class="detail-item">
+                  2. 针对高消费档次用户设计专属广告内容
+                </div>
+                <div class="detail-item">
+                  3. 根据不同城市层级调整广告策略和内容
+                </div>
+                <div class="detail-item">
+                  4. 重点维护购物深度3级的高价值用户
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      }
+    };
+
+    // ========== 核心修复4：菜单折叠功能优化 ==========
+    const shoppingLevelParent = document.getElementById('shoppingLevelParent');
+    const shoppingLevelSubmenu = document.getElementById('shoppingLevelSubmenu');
+    let isSubmenuOpen = false;
+    shoppingLevelParent.classList.add('collapsed');
+
+    shoppingLevelParent.addEventListener('click', function(e) {
+      e.stopPropagation();
+      isSubmenuOpen = !isSubmenuOpen;
+      if (isSubmenuOpen) {
+        shoppingLevelSubmenu.classList.add('show');
+        shoppingLevelParent.classList.remove('collapsed');
+      } else {
+        shoppingLevelSubmenu.classList.remove('show');
+        shoppingLevelParent.classList.add('collapsed');
+      }
+    });
+
+    // ========== 核心修复5：路由逻辑增强（解决渲染时机问题） ==========
+    const contentWrapper = document.getElementById('contentWrapper');
+    const currentPageTitle = document.getElementById('currentPageTitle');
+    const menuItems = document.querySelectorAll('.menu-item[data-route]');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    // 切换路由的核心函数（延长渲染延迟）
+    function navigateTo(route) {
+      if (!routes[route]) route = '/index';
+
+      window.location.hash = route;
+      contentWrapper.innerHTML = routes[route].content;
+      currentPageTitle.textContent = routes[route].title;
+
+      // 更新菜单激活状态
+      menuItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.route === route) {
+          item.classList.add('active');
+          // 自动展开购物深度子菜单
+          if (route.startsWith('/shoppingLevel')) {
+            isSubmenuOpen = true;
+            shoppingLevelSubmenu.classList.add('show');
+            shoppingLevelParent.classList.remove('collapsed');
+          }
+        }
+      });
+
+      // 核心修复：延迟1000ms执行渲染，确保DOM完全加载
+      if (routes[route].afterRender) {
+        setTimeout(() => {
+          routes[route].afterRender();
+        }, 1000);
+      }
+
+      bindContentRoutes();
+      updateTime();
+    }
+
+    // 为内容中的可点击元素绑定路由
+    function bindContentRoutes() {
+      const contentItems = contentWrapper.querySelectorAll('[data-route]');
+      contentItems.forEach(item => {
+        item.addEventListener('click', function () {
+          navigateTo(this.dataset.route);
+        });
+      });
+    }
+
+    // 监听Hash变化
+    window.addEventListener('hashchange', function () {
+      const currentRoute = window.location.hash.slice(1) || '/index';
+      navigateTo(currentRoute);
+    });
+
+    // 菜单点击事件
+    menuItems.forEach(item => {
+      item.addEventListener('click', function () {
+        navigateTo(this.dataset.route);
+      });
+    });
+
+    // 侧边栏收缩/展开
+    sidebarToggle.addEventListener('click', function () {
+      sidebar.style.width = sidebar.style.width === '60px' ? '200px' : '60px';
+    });
+
+    // 页面初始化
+    window.addEventListener('load', function () {
+      const initialRoute = window.location.hash.slice(1) || '/index';
+      navigateTo(initialRoute);
+      bindContentRoutes();
+    });
+  </script>
 </body>
+
 </html>
