@@ -340,6 +340,126 @@ def shopping_level_convert():
         'msg': '查询成功'
     })
 
+@app.route("/pidclkany")
+def pidclkany():
+    """
+    获取各个资源位的点击率
+    :return: json
+    """
+    sql = "select pid, clk_percent from pid_clk"
+
+    result = query_db(sql)
+    if  not result['success']:
+        return jsonify({
+            'code' : 500,
+             'data' : {},
+            'msg' : result['message']
+        })
+    print(result)
+    xAxis = []
+    yAxis = []
+    for i in result['data']:
+        xAxis.append(i['pid'])
+        yAxis.append(i['clk_percent'])
+    response_data = {
+        'xAxis': xAxis,
+        'series': [
+            {'name': '点击转化率', 'data': yAxis}
+
+        ]
+    }
+    return jsonify({
+        'code': 200,
+        'data': response_data,
+        'msg': '查询成功'
+    })
+
+@app.route('/hour_click_rate')
+def hour_click_rate():
+    """
+        获取每小时的点击率
+        :return: json
+        """
+    sql = "select hour, click_rate from hourly_click_rate"
+
+    result = query_db(sql)
+    if not result['success']:
+        return jsonify({
+            'code': 500,
+            'data': {},
+            'msg': result['message']
+        })
+
+    xAxis = []
+    yAxis = []
+    for i in result['data']:
+        xAxis.append(i['hour'])
+        yAxis.append(float(i['click_rate']))
+    response_data = {
+        'xAxis': xAxis,
+        'series': [
+            {'name': '点击转化率', 'data': yAxis}
+
+        ]
+    }
+    return jsonify({
+        'code': 200,
+        'data': response_data,
+        'msg': '查询成功'
+    })
+@app.route("/citybrandclick")
+def citybrandclick():
+    """
+    获取分组柱状图数据（按城市等级分组，品牌为系列）
+    :return: json
+    """
+    # 查询所有城市等级-品牌-点击率数据
+    sql = "select city_level, brand, click_rate from city_brand_preference"
+    result = query_db(sql)
+
+    if not result['success']:
+        return jsonify({
+            'code': 500,
+            'data': {},
+            'msg': result['message']
+        })
+
+    # 数据重组：适配分组柱状图
+    # 1. 提取所有唯一的城市等级（X轴）和品牌（系列）
+    city_levels = sorted(list(set([item['city_level'] for item in result['data']])))
+    brands = sorted(list(set([item['brand'] for item in result['data']])))
+
+    # 2. 构建系列数据：每个品牌对应各城市等级的点击率
+    series = []
+    for brand in brands:
+        brand_data = []
+        for level in city_levels:
+            # 查找该品牌在该城市等级的点击率，无数据则填0
+            click_rate = 0
+            for item in result['data']:
+                if item['city_level'] == level and item['brand'] == brand:
+                    click_rate = item['click_rate']
+                    break
+            brand_data.append(click_rate)
+        series.append({
+            "name": f"品牌{brand}",  # 系列名称（如品牌1、品牌2）
+            "type": "bar",  # 柱状图类型
+            "data": brand_data  # 该品牌在各城市等级的点击率
+        })
+
+    # 最终返回给前端的格式
+    response_data = {
+        'xAxis': city_levels,  # X轴：城市等级
+        'series': series       # 系列：各品牌的点击率数据
+    }
+
+    return jsonify({
+        'code': 200,
+        'data': response_data,
+        'msg': '查询成功'
+    })
+
 
 if __name__ == '__main__':
+    pidclkany()
     app.run(host='0.0.0.0', port=5000, debug=True)

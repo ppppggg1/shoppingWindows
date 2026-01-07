@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 
@@ -449,7 +450,7 @@
     }
 
     /* 图表容器强制样式 */
-    #behaviorChart, #trendChart, #convertChart {
+    .chart-placeholder {
       width: 100% !important;
       height: 400px !important;
       min-height: 400px !important;
@@ -770,36 +771,51 @@
 
     // 渲染行为分布图表
     async function renderBehaviorChart() {
-      const chartContainer = document.querySelector('.chart-container');
-      // 显示加载状态
-      if (chartContainer) {
-        chartContainer.innerHTML = `
-          <div class="loading">
-            <i class="fas fa-spinner"></i>
-            <p>数据加载中...</p>
-          </div>
-        `;
+      // 查找图表容器
+      let chartContainer = document.querySelector('.dashboard-card .chart-container');
+      if (!chartContainer) {
+        // 尝试更精确的查找
+        const cards = document.querySelectorAll('.dashboard-card');
+        for (let card of cards) {
+          const container = card.querySelector('.chart-container');
+          if (container && !container.querySelector('canvas')) {
+            chartContainer = container;
+            break;
+          }
+        }
       }
+
+      if (!chartContainer) {
+        console.error('找不到图表容器');
+        return;
+      }
+
+      // 显示加载状态
+      chartContainer.innerHTML = `
+        <div class="loading">
+          <i class="fas fa-spinner"></i>
+          <p>数据加载中...</p>
+        </div>
+      `;
 
       try {
         // 获取数据
         const behaviorData = await fetchApiData('/shoppingLevel/behavior');
+
         // 等待DOM完全渲染
         await new Promise(resolve => setTimeout(resolve, 300));
 
-        // 初始化图表
-        const myChart = initChart('behaviorChart');
-        if (!myChart) {
-          if (chartContainer) {
-            chartContainer.innerHTML = `
-              <div class="loading" style="color: #ff4444;">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>图表容器加载失败，请刷新页面</p>
-              </div>
-            `;
-          }
-          return;
+        // 清空容器并创建图表div
+        chartContainer.innerHTML = '<div id="behaviorChart" class="chart-placeholder"></div>';
+
+        // 获取图表元素
+        const chartElement = document.getElementById('behaviorChart');
+        if (!chartElement) {
+          throw new Error('图表元素创建失败');
         }
+
+        // 初始化图表
+        const myChart = echarts.init(chartElement);
 
         const option = {
           backgroundColor: 'transparent',
@@ -856,32 +872,47 @@
 
     // 渲染时间趋势图表
     async function renderTrendChart() {
-      const chartContainer = document.querySelector('.chart-container');
-      if (chartContainer) {
-        chartContainer.innerHTML = `
-          <div class="loading">
-            <i class="fas fa-spinner"></i>
-            <p>数据加载中...</p>
-          </div>
-        `;
+      // 查找图表容器
+      let chartContainer = document.querySelector('.dashboard-card .chart-container');
+      if (!chartContainer) {
+        // 尝试更精确的查找
+        const cards = document.querySelectorAll('.dashboard-card');
+        for (let card of cards) {
+          const container = card.querySelector('.chart-container');
+          if (container && !container.querySelector('canvas')) {
+            chartContainer = container;
+            break;
+          }
+        }
       }
+
+      if (!chartContainer) {
+        console.error('找不到图表容器');
+        return;
+      }
+
+      // 显示加载状态
+      chartContainer.innerHTML = `
+        <div class="loading">
+          <i class="fas fa-spinner"></i>
+          <p>数据加载中...</p>
+        </div>
+      `;
 
       try {
         const trendData = await fetchApiData('/shoppingLevel/trend');
         await new Promise(resolve => setTimeout(resolve, 300));
 
-        const myChart = initChart('trendChart');
-        if (!myChart) {
-          if (chartContainer) {
-            chartContainer.innerHTML = `
-              <div class="loading" style="color: #ff4444;">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>图表容器加载失败，请刷新页面</p>
-              </div>
-            `;
-          }
-          return;
+        // 清空容器并创建图表div
+        chartContainer.innerHTML = '<div id="trendChart" class="chart-placeholder"></div>';
+
+        // 获取图表元素
+        const chartElement = document.getElementById('trendChart');
+        if (!chartElement) {
+          throw new Error('图表元素创建失败');
         }
+
+        const myChart = echarts.init(chartElement);
 
         const colors = ['#00a1ff', '#00ffaa', '#e91e63'];
         const option = {
@@ -938,32 +969,47 @@
 
     // 渲染转化率图表
     async function renderConvertChart() {
-      const chartContainer = document.querySelector('.chart-container');
-      if (chartContainer) {
-        chartContainer.innerHTML = `
-          <div class="loading">
-            <i class="fas fa-spinner"></i>
-            <p>数据加载中...</p>
-          </div>
-        `;
+      // 查找图表容器
+      let chartContainer = document.querySelector('.dashboard-card .chart-container');
+      if (!chartContainer) {
+        // 尝试更精确的查找
+        const cards = document.querySelectorAll('.dashboard-card');
+        for (let card of cards) {
+          const container = card.querySelector('.chart-container');
+          if (container && !container.querySelector('canvas')) {
+            chartContainer = container;
+            break;
+          }
+        }
       }
+
+      if (!chartContainer) {
+        console.error('找不到图表容器');
+        return;
+      }
+
+      // 显示加载状态
+      chartContainer.innerHTML = `
+        <div class="loading">
+          <i class="fas fa-spinner"></i>
+          <p>数据加载中...</p>
+        </div>
+      `;
 
       try {
         const convertData = await fetchApiData('/shoppingLevel/convert');
         await new Promise(resolve => setTimeout(resolve, 300));
 
-        const myChart = initChart('convertChart');
-        if (!myChart) {
-          if (chartContainer) {
-            chartContainer.innerHTML = `
-              <div class="loading" style="color: #ff4444;">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>图表容器加载失败，请刷新页面</p>
-              </div>
-            `;
-          }
-          return;
+        // 清空容器并创建图表div
+        chartContainer.innerHTML = '<div id="convertChart" class="chart-placeholder"></div>';
+
+        // 获取图表元素
+        const chartElement = document.getElementById('convertChart');
+        if (!chartElement) {
+          throw new Error('图表元素创建失败');
         }
+
+        const myChart = echarts.init(chartElement);
 
         const colors = ['#9c27b0', '#4caf50'];
         const option = {
@@ -1400,7 +1446,7 @@
                   <span>不同购物深度用户行为分布</span>
                 </div>
                 <div class="chart-container">
-                  <div id="behaviorChart"></div>
+                  <div id="behaviorChart" class="chart-placeholder"></div>
                 </div>
               </div>
             </div>
@@ -1442,7 +1488,7 @@
                   <span>不同购物深度用户活跃时间趋势</span>
                 </div>
                 <div class="chart-container">
-                  <div id="trendChart"></div>
+                  <div id="trendChart" class="chart-placeholder"></div>
                 </div>
               </div>
             </div>
@@ -1484,7 +1530,7 @@
                   <span>不同购物深度用户转化率对比</span>
                 </div>
                 <div class="chart-container">
-                  <div id="convertChart"></div>
+                  <div id="convertChart" class="chart-placeholder"></div>
                 </div>
               </div>
             </div>
@@ -1612,11 +1658,15 @@
         }
       });
 
-      // 核心修复：延迟1000ms执行渲染，确保DOM完全加载
+      // 核心修复：延迟300ms执行渲染，确保DOM完全加载
       if (routes[route].afterRender) {
         setTimeout(() => {
-          routes[route].afterRender();
-        }, 1000);
+          try {
+            routes[route].afterRender();
+          } catch (error) {
+            console.error('渲染图表时出错:', error);
+          }
+        }, 300);
       }
 
       bindContentRoutes();
