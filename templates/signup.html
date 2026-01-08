@@ -17,9 +17,74 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            /* 与登录页完全一致的紫色渐变背景 */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
+            position: relative; /* 为自定义提示框提供定位父级 */
+        }
+
+        /* 新增：自定义提示框样式（核心） */
+        .custom-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 24px 30px;
+            min-width: 280px;
+            max-width: 400px;
+            text-align: center;
+            z-index: 9999; /* 确保在最上层 */
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .custom-alert.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .custom-alert p {
+            color: #2d3748;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .custom-alert button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 8px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .custom-alert button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+        }
+
+        /* 遮罩层 */
+        .alert-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .alert-mask.show {
+            opacity: 1;
+            visibility: visible;
         }
 
         .register-container {
@@ -30,7 +95,6 @@
             max-width: 450px;
             padding: 40px 35px;
             overflow: hidden;
-            /* 与登录容器样式一致 */
         }
 
         .register-header {
@@ -43,13 +107,11 @@
             font-size: 28px;
             font-weight: 600;
             margin-bottom: 8px;
-            /* 与登录页标题样式一致 */
         }
 
         .register-header p {
             color: #718096;
             font-size: 14px;
-            /* 与登录页副标题样式一致 */
         }
 
         .register-form {
@@ -73,11 +135,9 @@
             color: #2d3748;
             transition: all 0.3s ease;
             outline: none;
-            /* 与登录页输入框样式完全一致 */
         }
 
         .form-group input:focus {
-            /* 聚焦时与登录页一致的紫色边框和阴影 */
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             background: #ffffff;
@@ -94,7 +154,6 @@
         }
 
         .form-group input:focus + label {
-            /* 聚焦时标签变为登录页同款紫色 */
             color: #667eea;
         }
 
@@ -116,7 +175,6 @@
 
         .register-btn {
             height: 52px;
-            /* 与登录按钮完全一致的紫色渐变背景 */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             border-radius: 8px;
@@ -126,11 +184,12 @@
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             margin-top: 10px;
+            position: relative;
+            overflow: hidden;
         }
 
         .register-btn:hover {
             transform: translateY(-2px);
-            /* 悬浮阴影与登录按钮一致 */
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
         }
 
@@ -138,16 +197,38 @@
             transform: translateY(0);
         }
 
+        .register-btn.loading {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .register-btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translateY(-50%) rotate(0deg); }
+            100% { transform: translateY(-50%) rotate(360deg); }
+        }
+
         .login-link {
             text-align: center;
             margin-top: 25px;
             font-size: 14px;
             color: #718096;
-            /* 与登录页注册链接容器样式一致 */
         }
 
         .login-link a {
-            /* 链接颜色与登录页一致 */
             color: #667eea;
             text-decoration: none;
             font-weight: 500;
@@ -155,12 +236,10 @@
         }
 
         .login-link a:hover {
-            /*  hover时与登录页一致的深紫色 */
             color: #764ba2;
             text-decoration: underline;
         }
 
-        /* 校验提示样式 */
         .error-tip {
             color: #dc3545;
             font-size: 12px;
@@ -174,7 +253,6 @@
         }
 
         .success-tip {
-            /* 成功提示使用主题紫色 */
             color: #667eea;
             font-size: 12px;
             margin-top: 5px;
@@ -182,7 +260,6 @@
             display: none;
         }
 
-        /* 响应式适配（与登录页完全一致） */
         @media (max-width: 480px) {
             .register-container {
                 padding: 30px 25px;
@@ -206,18 +283,22 @@
             }
         }
     </style>
-    <!-- 与登录页共用同一个图标库 -->
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- 新增：自定义提示框DOM结构 -->
+    <div class="alert-mask" id="alertMask"></div>
+    <div class="custom-alert" id="customAlert">
+        <p id="alertMessage"></p>
+        <button id="alertCloseBtn">确定</button>
+    </div>
+
     <div class="register-container">
-        <!-- 注册头部（与登录页布局一致） -->
         <div class="register-header">
             <h1>账号注册</h1>
             <p>填写以下信息，创建你的账号</p>
         </div>
 
-        <!-- 注册表单 -->
         <form class="register-form" id="registerForm">
             <div class="form-group">
                 <input type="text" id="username" placeholder="请输入登录用户名/手机号" required>
@@ -261,10 +342,9 @@
                 <div class="error-tip" id="confirmPwdError">两次输入的密码不一致</div>
             </div>
 
-            <button type="submit" class="register-btn">提交注册</button>
+            <button type="submit" class="register-btn" id="registerBtn">提交注册</button>
         </form>
 
-        <!-- 登录链接（与登录页注册链接样式对称） -->
         <div class="login-link">
             已有账号？
             <a href="./" target="_self">立即登录</a>
@@ -272,8 +352,10 @@
     </div>
 
     <script>
-        // 获取表单元素和提示元素
+        // 获取DOM元素
         const registerForm = document.getElementById('registerForm');
+        const registerBtn = document.getElementById('registerBtn');
+
         const username = document.getElementById('username');
         const nickname = document.getElementById('nickname');
         const email = document.getElementById('email');
@@ -286,7 +368,13 @@
         const passwordError = document.getElementById('passwordError');
         const confirmPwdError = document.getElementById('confirmPwdError');
 
-        // 前端校验函数：显示错误提示
+        // 新增：自定义提示框相关元素
+        const customAlert = document.getElementById('customAlert');
+        const alertMask = document.getElementById('alertMask');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertCloseBtn = document.getElementById('alertCloseBtn');
+
+        // 显示错误提示
         function showError(el, tipEl) {
             el.classList.add('input-error');
             tipEl.style.display = 'block';
@@ -300,16 +388,54 @@
 
         // 邮箱格式校验
         function isEmailValid(emailVal) {
-            if (!emailVal) return true; // 选填，为空时直接通过
+            if (!emailVal) return true;
             const reg = /^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
             return reg.test(emailVal);
         }
 
-        // 监听表单提交事件
-        registerForm.addEventListener('submit', async function(e) {
-            e.preventDefault(); // 阻止默认刷新行为
+        // 设置按钮加载状态
+        function setLoadingState(isLoading) {
+            if (isLoading) {
+                registerBtn.classList.add('loading');
+                registerBtn.disabled = true;
+                registerBtn.textContent = '注册中...';
+            } else {
+                registerBtn.classList.remove('loading');
+                registerBtn.disabled = false;
+                registerBtn.textContent = '提交注册';
+            }
+        }
 
-            // 获取输入值
+        // 新增：自定义提示框函数（替代alert）
+        function showCustomAlert(msg, autoClose = false) {
+            alertMessage.textContent = msg;
+            customAlert.classList.add('show');
+            alertMask.classList.add('show');
+
+            // 如果设置自动关闭，3秒后隐藏
+            if (autoClose) {
+                setTimeout(() => {
+                    hideCustomAlert();
+                }, 3000);
+            }
+        }
+
+        // 新增：隐藏自定义提示框
+        function hideCustomAlert() {
+            customAlert.classList.remove('show');
+            alertMask.classList.remove('show');
+        }
+
+        // 新增：绑定提示框关闭按钮事件
+        alertCloseBtn.addEventListener('click', hideCustomAlert);
+        // 点击遮罩层关闭提示框
+        alertMask.addEventListener('click', hideCustomAlert);
+
+        // 监听表单提交
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // 获取并清洗输入值
             const usernameVal = username.value.trim();
             const nicknameVal = nickname.value.trim();
             const emailVal = email.value.trim();
@@ -363,7 +489,7 @@
                 return;
             }
 
-            // 前端校验通过，组装注册数据（与Flask后端JSON格式匹配）
+            // 前端校验通过，准备提交
             const registerData = {
                 username: usernameVal,
                 nickname: nicknameVal,
@@ -372,11 +498,13 @@
             };
 
             try {
-                // 发送注册请求到Flask后端接口
+                setLoadingState(true);
+
+                // 发送注册请求
                 const response = await fetch('/api/register-user', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json' // 与后端request.get_json()匹配
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(registerData)
                 });
@@ -384,20 +512,26 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // 注册成功提示，跳转到登录页
-                    alert(result.message || '注册成功！即将跳转到登录页');
-                    window.location.href = './'; // 跳转到登录页（根路径）
+                    // 替换alert为自定义提示框，自动关闭后跳转
+                    showCustomAlert(result.message || '注册成功！即将跳转到登录页', true);
+                    setTimeout(() => {
+                        window.location.href = './';
+                    }, 1500);
                 } else {
-                    // 注册失败提示（如用户名已存在）
-                    alert(result.message || '注册失败，请重试');
+                    // 替换alert为自定义提示框
+                    showCustomAlert(result.message || '注册失败，请重试');
                 }
+
             } catch (error) {
                 console.error('注册请求异常：', error);
-                alert('网络异常，请检查网络连接后重试');
+                // 替换alert为自定义提示框
+                showCustomAlert('网络异常，请检查网络连接后重试');
+            } finally {
+                setLoadingState(false);
             }
         });
 
-        // 实时监听输入，移除错误提示（提升用户体验）
+        // 实时输入监听
         [username, nickname, email, password, confirmPwd].forEach(input => {
             input.addEventListener('input', function() {
                 const errorId = this.id + 'Error';
@@ -406,6 +540,17 @@
                     hideError(this, errorTip);
                 }
             });
+        });
+
+        // 密码框输入时，实时校验确认密码
+        confirmPwd.addEventListener('input', function() {
+            const pwdVal = password.value.trim();
+            const confirmVal = this.value.trim();
+            if (confirmVal && confirmVal !== pwdVal) {
+                showError(this, confirmPwdError);
+            } else {
+                hideError(this, confirmPwdError);
+            }
         });
     </script>
 </body>

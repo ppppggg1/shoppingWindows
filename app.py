@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS  # 新增
 from dbutils.pooled_db import PooledDB
 import pymysql
+import re
 from datetime import datetime
 app = Flask(__name__)
 CORS(app)
@@ -20,6 +21,64 @@ pool = PooledDB(
     charset='utf8',
     db='itcast'
 )
+
+
+def query_db1(sql, params=None, is_insert=False):
+    """
+    通用数据库操作函数
+    :param sql: SQL语句
+    :param params: SQL参数（tuple）
+    :param is_insert: 是否为插入操作（返回自增ID）
+    :return: 操作结果字典
+    """
+    try:
+        conn = pool.connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+
+        if params:
+            cursor.execute(sql, params)
+        else:
+            cursor.execute(sql)
+
+        if is_insert:
+            # 插入操作：提交事务并返回自增ID
+            conn.commit()
+            result = {'success': True, 'insert_id': cursor.lastrowid}
+        else:
+            # 查询操作：返回结果集
+            result = {'success': True, 'data': cursor.fetchall()}
+
+        cursor.close()
+        conn.close()
+        return result
+    except Exception as e:
+        print(f"数据库操作异常：{str(e)}")
+        return {'success': False, 'error': str(e)}
+
+
+# 3. 辅助函数：邮箱格式校验（与前端保持一致）
+def is_email_valid(email):
+    if not email:
+        return True  # 邮箱选填
+    pattern = r'^[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$'
+    return re.match(pattern, email) is not None
+
+
+# 4. 密码处理函数（两种方案）
+def handle_password(password):
+    """
+    密码处理：生产环境用哈希，测试环境用明文
+    :param password: 原始密码
+    :return: 处理后的密码
+    """
+    # 方案1：生产环境（推荐）- bcrypt哈希
+    # salt = bcrypt.gensalt()
+    # hashed_pwd = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+    # return hashed_pwd
+
+    # 方案2：测试环境-明文（与登录接口匹配）
+    return password
+
 
 
 # 通用数据库查询函数（封装重复逻辑）
@@ -151,6 +210,88 @@ def verifyuser():
         return jsonify({
             'success': False,
             'message': '服务器内部错误，请稍后重试'
+        })
+
+
+# 5. 注册接口实现（前端请求地址：/api/register-user）
+@app.route('/api/register-user', methods=['POST'])
+def register_user():
+    # 1. 获取前端JSON数据
+    request_data = request.get_json()
+    if not request_data:
+        return jsonify({
+            'success': False,
+            'message': '请求数据格式错误，请使用JSON格式'
+        })
+
+    # 2. 提取并清洗数据
+    username = request_data.get('username', '').strip()
+    nickname = request_data.get('nickname', '').strip()
+    email = request_data.get('email', '').strip()
+    password = request_data.get('password', '').strip()
+
+    # 3. 基础数据校验
+    if not username or len(username) < 3:
+        return jsonify({
+            'success': False,
+            'message': '用户名不能为空，且长度不小于3位'
+        })
+
+    if not nickname:
+        return jsonify({
+            'success': False,
+            'message': '昵称不能为空'
+        })
+
+    if not password or len(password) < 6:
+        return jsonify({
+            'success': False,
+            'message': '密码长度不小于6位'
+        })
+
+    if not is_email_valid(email):
+        return jsonify({
+            'success': False,
+            'message': '邮箱格式不正确'
+        })
+
+    # 4. 校验用户名是否已存在
+    check_sql = "SELECT id FROM sys_user WHERE username = %s LIMIT 1"
+    # 修复：位置参数传递，不使用关键字
+    check_result = query_db1(check_sql, (username,), False)
+
+    if not check_result['success']:
+        return jsonify({
+            'success': False,
+            'message': '数据库查询异常，请稍后重试'
+        })
+
+    if check_result['data']:
+        return jsonify({
+            'success': False,
+            'message': '该用户名已被注册，请更换用户名'
+        })
+
+    # 5. 处理密码并插入数据库
+    hashed_password = handle_password(password)
+    insert_sql = """
+        INSERT INTO sys_user (username, nickname, email, password, status) 
+        VALUES (%s, %s, %s, %s, 1)
+    """
+    insert_params = (username, nickname, email, hashed_password)
+    # 核心修复：调用query_db时用位置参数传is_insert，而非关键字参数
+    insert_result = query_db1(insert_sql, insert_params, True)
+
+    if insert_result['success']:
+        return jsonify({
+            'success': True,
+            'message': '注册成功！请返回登录',
+            'userId': insert_result['insert_id']
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': f'注册失败：{insert_result.get("error", "未知错误")}'
         })
 
 

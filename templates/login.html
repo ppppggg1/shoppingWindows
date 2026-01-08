@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>用户登录 | 现代管理系统</title>
     <style>
+        /* 原有样式保持不变，此处省略 */
         * {
             margin: 0;
             padding: 0;
@@ -183,18 +184,15 @@
             }
         }
     </style>
-    <!-- 引入图标库 -->
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="login-container">
-        <!-- 登录头部 -->
         <div class="login-header">
             <h1>欢迎登录</h1>
             <p>请输入您的账号和密码进行登录</p>
         </div>
 
-        <!-- 登录表单 -->
         <form class="login-form" id="loginForm">
             <div class="form-group">
                 <input type="text" id="username" required placeholder="请输入用户名/手机号">
@@ -223,7 +221,6 @@
             <button type="submit" class="login-btn">登录</button>
         </form>
 
-        <!-- 注册链接 -->
         <div class="register-link">
             还没有账号？
             <a href="/signup" >立即注册</a>
@@ -231,36 +228,49 @@
     </div>
 
     <script>
-             // 1. 获取表单元素
+        // 1. 获取表单元素
         const loginForm = document.getElementById('loginForm');
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
         const rememberCheckbox = document.getElementById('remember');
-        //页面加载时自动填充用户名
-        window.addEventListener('load', function() {
-        const savedUsername = localStorage.getItem('saved_login_username');
-        if (savedUsername) {
-            usernameInput.value = savedUsername;
-            rememberCheckbox.checked = true;
-        }
-        //表单提交时处理存储逻辑通过 rememberCheckbox.checked 判断是否勾选「记住我」。勾选：使用 localStorage.setItem() 保存用户名（永久有效）。未勾选：使用 localStorage.removeItem() 删除保存的用户名（不记忆）。
-        const isRemember = rememberCheckbox.checked;
-        if (isRemember) {
-            localStorage.setItem('saved_login_username', username);
-        } else {
-            localStorage.removeItem('saved_login_username');
-        }
-});
-        // 2. 监听表单提交事件
-        loginForm.addEventListener('submit', async function(e) {
-            // 阻止表单默认提交（避免页面刷新）
-            e.preventDefault();
 
-            // 3. 获取并格式化输入数据
+        // 辅助函数：Base64编码（简单加密，避免明文存储）
+        function encodeStr(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+
+        // 辅助函数：Base64解码
+        function decodeStr(str) {
+            try {
+                return decodeURIComponent(escape(atob(str)));
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // 2. 页面加载时自动填充用户名和密码
+        window.addEventListener('load', function() {
+            // 读取本地存储的登录信息
+            const savedUsername = localStorage.getItem('saved_login_username');
+            const savedPassword = localStorage.getItem('saved_login_password');
+
+            // 如果有存储的信息，自动填充
+            if (savedUsername && savedPassword) {
+                usernameInput.value = decodeStr(savedUsername);
+                passwordInput.value = decodeStr(savedPassword);
+                rememberCheckbox.checked = true;
+            }
+        });
+
+        // 3. 监听表单提交事件
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // 阻止默认提交
+
+            // 获取并格式化输入数据
             const username = usernameInput.value.trim();
             const password = passwordInput.value.trim();
 
-            // 4. 前端非空校验（可选，减轻后端压力）
+            // 前端非空校验
             if (!username) {
                 alert('请输入账号！');
                 return;
@@ -270,12 +280,24 @@
                 return;
             }
 
+            // 处理「记住我」逻辑
+            const isRemember = rememberCheckbox.checked;
+            if (isRemember) {
+                // 勾选：存储加密后的用户名和密码
+                localStorage.setItem('saved_login_username', encodeStr(username));
+                localStorage.setItem('saved_login_password', encodeStr(password));
+            } else {
+                // 未勾选：删除本地存储的信息
+                localStorage.removeItem('saved_login_username');
+                localStorage.removeItem('saved_login_password');
+            }
+
             try {
-                // 5. 第一步POST请求：验证账号密码（查询数据库匹配）
-                const verifyResponse = await fetch('/api/verify-user', { // 后端验证接口地址
+                // 4. 发送验证请求
+                const verifyResponse = await fetch('/api/verify-user', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json', // 声明JSON格式
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         username: username,
@@ -283,46 +305,21 @@
                     })
                 });
 
-                // 判断验证请求是否成功（HTTP状态码200-299）
                 if (!verifyResponse.ok) {
                     throw new Error(`验证请求失败：${verifyResponse.status}`);
                 }
 
-                // 解析后端返回的验证结果
                 const verifyResult = await verifyResponse.json();
                 console.log('验证结果：', verifyResult);
 
-                // 6. 账号密码匹配判断（后端返回success: true 表示匹配）
                 if (verifyResult.success) {
-                    // 7. 验证通过：发送对应的业务POST请求（按需自定义）
-                    try {
-                        // 业务POST请求数据（可携带用户信息等）
-                        const businessData = {
-                            userId: verifyResult.userId, // 后端返回的用户ID
-                            username: username,
-                            loginTime: new Date().toLocaleString() // 登录时间
-                        };
-
-
-                        // 8. 业务请求完成后，跳转至主页面（两种跳转方式可选）
-                        // 方式1：普通跳转（可回退）
-                        window.location.href = '/root'; // 你的主页面地址
-                        // 方式2：替换历史记录（不可回退，更安全）
-                        // window.location.replace('/main.html');
-
-                    } catch (businessError) {
-                        // 业务POST请求失败提示
-                        console.error('业务请求异常：', businessError);
-                        alert('登录成功，但业务初始化失败，请重试！');
-                    }
-
+                    // 登录成功，跳转主页面
+                    window.location.href = '/root';
                 } else {
-                    // 账号密码不匹配提示
                     alert(verifyResult.message || '账号或密码错误，请重新输入！');
                 }
 
             } catch (error) {
-                // 网络错误或验证请求异常提示
                 console.error('登录验证异常：', error);
                 alert('网络异常，请检查网络连接后重试！');
             }
