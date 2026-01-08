@@ -64,7 +64,7 @@ def query_db(sql, params=None):
 
 
 # 登录页面
-@app.route('/login')
+@app.route('/')
 def login():
     return render_template("login.html")
 
@@ -82,7 +82,7 @@ def forgetpass():
 
 
 # 主页面
-@app.route('/')
+@app.route('/root')
 def root():
     return render_template("root.html")
 
