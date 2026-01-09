@@ -424,7 +424,7 @@ def shopping_level_trend():
 
 
 # 接口3：购物深度-转化率
-@app.route('/api/shoppingLevel/convert', methods=['GET'])
+@app.route('/api/consumption/level', methods=['GET'])
 def shopping_level_convert():
     """
     获取不同购物深度用户的转化率数据
@@ -481,7 +481,7 @@ def shopping_level_convert():
         'msg': '查询成功'
     })
 
-@app.route("/pidclkany")
+@app.route("/api/pidclkany")
 def pidclkany():
     """
     获取各个资源位的点击率
@@ -496,7 +496,7 @@ def pidclkany():
              'data' : {},
             'msg' : result['message']
         })
-    print(result)
+
     xAxis = []
     yAxis = []
     for i in result['data']:
@@ -509,13 +509,14 @@ def pidclkany():
 
         ]
     }
+    print(response_data)
     return jsonify({
         'code': 200,
         'data': response_data,
         'msg': '查询成功'
     })
 
-@app.route('/hour_click_rate')
+@app.route('/api/hour_click_rate')
 def hour_click_rate():
     """
         获取每小时的点击率
@@ -543,57 +544,66 @@ def hour_click_rate():
 
         ]
     }
+
     return jsonify({
         'code': 200,
         'data': response_data,
         'msg': '查询成功'
     })
-@app.route("/citybrandclick")
+
+
+@app.route("/api/requirement4/city")
 def citybrandclick():
     """
     获取分组柱状图数据（按城市等级分组，品牌为系列）
-    :return: json
+    :return: json，格式适配 ECharts 分组柱状图
     """
-    # 查询所有城市等级-品牌-点击率数据
+    # 1. 数据库查询
     sql = "select city_level, brand, click_rate from city_brand_preference"
     result = query_db(sql)
 
-    if not result['success']:
+    # 2. 处理查询异常
+    if not result.get('success', False):
         return jsonify({
             'code': 500,
             'data': {},
-            'msg': result['message']
+            'msg': result.get('message', '数据库查询失败')
         })
 
-    # 数据重组：适配分组柱状图
-    # 1. 提取所有唯一的城市等级（X轴）和品牌（系列）
-    city_levels = sorted(list(set([item['city_level'] for item in result['data']])))
-    brands = sorted(list(set([item['brand'] for item in result['data']])))
+    # 提取原始数据（确保数据非空）
+    raw_data = result.get('data', [])
+    if not raw_data:
+        return jsonify({
+            'code': 200,
+            'data': {'xAxis': [], 'series': []},
+            'msg': '暂无数据'
+        })
 
-    # 2. 构建系列数据：每个品牌对应各城市等级的点击率
+    # 3. 数据重组（优化版：用字典映射替代多层循环）
+    # 3.1 提取唯一维度并排序
+    city_levels = sorted(list(set([item['city_level'] for item in raw_data])))
+    brands = sorted(list(set([item['brand'] for item in raw_data])))
+
+    # 3.2 构建数据映射表（城市等级+品牌 → 点击率），提升查找效率
+    data_map = {(item['city_level'], item['brand']): item['click_rate'] for item in raw_data}
+
+    # 3.3 生成系列数据（适配前端分组柱状图）
     series = []
     for brand in brands:
-        brand_data = []
-        for level in city_levels:
-            # 查找该品牌在该城市等级的点击率，无数据则填0
-            click_rate = 0
-            for item in result['data']:
-                if item['city_level'] == level and item['brand'] == brand:
-                    click_rate = item['click_rate']
-                    break
-            brand_data.append(click_rate)
+        # 按城市等级顺序提取当前品牌的点击率，无数据则填0
+        brand_click_rates = [data_map.get((level, brand), 0) for level in city_levels]
         series.append({
-            "name": f"品牌{brand}",  # 系列名称（如品牌1、品牌2）
-            "type": "bar",  # 柱状图类型
-            "data": brand_data  # 该品牌在各城市等级的点击率
+            "name": f"品牌{brand}",  # 系列名称（前端显示的图例）
+            "type": "bar",  # 图表类型：柱状图
+            "data": brand_click_rates  # 该品牌在各城市等级的点击率数组
         })
 
-    # 最终返回给前端的格式
+    # 4. 构造最终返回数据（符合前端可视化库规范）
     response_data = {
-        'xAxis': city_levels,  # X轴：城市等级
-        'series': series       # 系列：各品牌的点击率数据
+        'xAxis': city_levels,  # X轴：城市等级列表（如[1,2,3]）
+        'series': series  # 系列数据：每个品牌对应一组柱子
     }
-
+    print(response_data)
     return jsonify({
         'code': 200,
         'data': response_data,

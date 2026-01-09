@@ -512,10 +512,18 @@
         <i class="fas fa-chart-pie"></i>
         <span>用户行为分布</span>
       </div>
-      <!-- 需求3：用户消费档次与点击率关系分析 -->
-      <div class="menu-item" data-route="/requirement3">
+      <!-- 需求3：用户消费档次与点击率关系分析（可折叠） -->
+      <div class="menu-item has-submenu" id="consumptionParent">
         <i class="fas fa-money-bill-wave"></i>
         <span>消费档次分析</span>
+      </div>
+      <!-- 新增：消费档次子菜单（包含转化率） -->
+      <div class="submenu" id="consumptionSubmenu">
+        <div class="menu-item" data-route="/consumption/level">
+          <i class="fas fa-list"></i>
+          <span>消费档次-点击分析</span>
+        </div>
+
       </div>
       <!-- 需求4：不同城市层级广告点击偏好分析 -->
       <div class="menu-item" data-route="/requirement4">
@@ -527,7 +535,7 @@
         <i class="fas fa-shopping-cart"></i>
         <span>购物深度分析</span>
       </div>
-      <!-- 新增：购物深度子菜单（可收缩） -->
+      <!-- 购物深度子菜单（移除转化率） -->
       <div class="submenu" id="shoppingLevelSubmenu">
         <div class="menu-item" data-route="/shoppingLevel/behavior">
           <i class="fas fa-list"></i>
@@ -536,10 +544,6 @@
         <div class="menu-item" data-route="/shoppingLevel/trend">
           <i class="fas fa-chart-line"></i>
           <span>购物深度-时间趋势</span>
-        </div>
-        <div class="menu-item" data-route="/shoppingLevel/convert">
-          <i class="fas fa-percentage"></i>
-          <span>购物深度-转化率</span>
         </div>
       </div>
       <!-- 详情分析 -->
@@ -723,6 +727,43 @@
     // 模拟数据（增强数据完整性）
     function getMockData(url) {
       switch(url) {
+        case '/requirement1/trend':
+          return {
+            xAxis: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:00'],
+            series: [
+              { name: '点击率', data: [1.8, 1.2, 2.1, 2.8, 2.9, 2.5, 2.0] }
+            ]
+          };
+        case '/requirement2/distribution':
+          return {
+            categories: ['点击', '未点击'],
+            data: [
+              { value: 2.34, name: '点击' },
+              { value: 97.66, name: '未点击' }
+            ]
+          };
+        case '/requirement2/behavior':
+          return {
+            xAxis: ['浏览', '点击', '加购', '购买'],
+            series: [
+              { name: '行为次数', data: [12000, 2800, 1500, 800] }
+            ]
+          };
+        case '/requirement4/city':
+          return {
+            xAxis: ['一线城市', '二线城市', '三线城市', '四线及以下'],
+            series: [
+              { name: '点击率', data: [3.2, 2.8, 2.1, 1.5] }
+            ]
+          };
+        case '/consumption/level':
+          return {
+            xAxis: ['低消费', '中消费', '高消费'],
+            series: [
+              { name: '点击率', data: [1.2, 2.1, 3.5] }
+            ]
+          };
+
         case '/shoppingLevel/behavior':
           return {
             xAxis: ['购物深度1', '购物深度2', '购物深度3'],
@@ -742,20 +783,12 @@
               { name: '购物深度3', data: [580, 480, 1200, 2000, 2500, 1800] }
             ]
           };
-        case '/shoppingLevel/convert':
-          return {
-            xAxis: ['购物深度1', '购物深度2', '购物深度3'],
-            series: [
-              { name: '点击转化率', data: [1.8, 2.5, 3.8] },
-              { name: '购买转化率', data: [0.6, 1.2, 2.5] }
-            ]
-          };
         default:
           return {};
       }
     }
 
-    // ========== 核心修复3：图表渲染函数重构（解决容器不存在问题） ==========
+    // ========== 核心修复3：图表渲染函数重构 ==========
     // 通用图表初始化函数
     function initChart(chartId) {
       const chartDom = document.getElementById(chartId);
@@ -769,158 +802,27 @@
       return echarts.init(chartDom);
     }
 
-    // 渲染行为分布图表
-    async function renderBehaviorChart() {
-      // 查找图表容器
-      let chartContainer = document.querySelector('.dashboard-card .chart-container');
-      if (!chartContainer) {
-        // 尝试更精确的查找
-        const cards = document.querySelectorAll('.dashboard-card');
-        for (let card of cards) {
-          const container = card.querySelector('.chart-container');
-          if (container && !container.querySelector('canvas')) {
-            chartContainer = container;
-            break;
-          }
-        }
-      }
+    // 渲染点击率时间趋势图
+    async function renderTimeTrendChart() {
+      const chartContainer = document.querySelector('#timeTrendChart');
+      if (!chartContainer) return;
 
-      if (!chartContainer) {
-        console.error('找不到图表容器');
-        return;
-      }
-
-      // 显示加载状态
-      chartContainer.innerHTML = `
-        <div class="loading">
-          <i class="fas fa-spinner"></i>
-          <p>数据加载中...</p>
-        </div>
-      `;
+      const loadingDiv = chartContainer.parentElement;
+      loadingDiv.innerHTML = '<div id="timeTrendChartInner" class="chart-placeholder"></div>';
 
       try {
-        // 获取数据
-        const behaviorData = await fetchApiData('/shoppingLevel/behavior');
+        const trendData = await fetchApiData('/hour_click_rate');
+        const chartDom = document.getElementById('timeTrendChartInner');
+        if (!chartDom) return;
 
-        // 等待DOM完全渲染
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // 清空容器并创建图表div
-        chartContainer.innerHTML = '<div id="behaviorChart" class="chart-placeholder"></div>';
-
-        // 获取图表元素
-        const chartElement = document.getElementById('behaviorChart');
-        if (!chartElement) {
-          throw new Error('图表元素创建失败');
-        }
-
-        // 初始化图表
-        const myChart = echarts.init(chartElement);
+        const myChart = echarts.init(chartDom);
 
         const option = {
           backgroundColor: 'transparent',
           tooltip: {
             trigger: 'axis',
-            axisPointer: { type: 'shadow' },
+            formatter: '{b}<br/>点击率: {c}%',
             textStyle: { color: '#fff' }
-          },
-          legend: {
-            data: behaviorData.series.map(item => item.name),
-            textStyle: { color: '#b8c2d9' }
-          },
-          grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            containLabel: true
-          },
-          xAxis: {
-            type: 'category',
-            data: behaviorData.xAxis,
-            axisLine: { lineStyle: { color: '#2a3655' } },
-            axisLabel: { color: '#b8c2d9' }
-          },
-          yAxis: {
-            type: 'value',
-            axisLine: { lineStyle: { color: '#2a3655' } },
-            axisLabel: { color: '#b8c2d9' },
-            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } }
-          },
-          series: behaviorData.series.map(item => ({
-            name: item.name,
-            type: 'bar',
-            data: item.data,
-            itemStyle: { borderRadius: 4 }
-          }))
-        };
-
-        myChart.setOption(option);
-        // 监听窗口大小变化
-        window.addEventListener('resize', () => myChart.resize());
-      } catch (e) {
-        console.error('渲染行为分布图表失败：', e);
-        if (chartContainer) {
-          chartContainer.innerHTML = `
-            <div class="loading" style="color: #ff4444;">
-              <i class="fas fa-exclamation-circle"></i>
-              <p>图表加载失败：${e.message}</p>
-            </div>
-          `;
-        }
-      }
-    }
-
-    // 渲染时间趋势图表
-    async function renderTrendChart() {
-      // 查找图表容器
-      let chartContainer = document.querySelector('.dashboard-card .chart-container');
-      if (!chartContainer) {
-        // 尝试更精确的查找
-        const cards = document.querySelectorAll('.dashboard-card');
-        for (let card of cards) {
-          const container = card.querySelector('.chart-container');
-          if (container && !container.querySelector('canvas')) {
-            chartContainer = container;
-            break;
-          }
-        }
-      }
-
-      if (!chartContainer) {
-        console.error('找不到图表容器');
-        return;
-      }
-
-      // 显示加载状态
-      chartContainer.innerHTML = `
-        <div class="loading">
-          <i class="fas fa-spinner"></i>
-          <p>数据加载中...</p>
-        </div>
-      `;
-
-      try {
-        const trendData = await fetchApiData('/shoppingLevel/trend');
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // 清空容器并创建图表div
-        chartContainer.innerHTML = '<div id="trendChart" class="chart-placeholder"></div>';
-
-        // 获取图表元素
-        const chartElement = document.getElementById('trendChart');
-        if (!chartElement) {
-          throw new Error('图表元素创建失败');
-        }
-
-        const myChart = echarts.init(chartElement);
-
-        const colors = ['#00a1ff', '#00ffaa', '#e91e63'];
-        const option = {
-          backgroundColor: 'transparent',
-          tooltip: { trigger: 'axis', textStyle: { color: '#fff' } },
-          legend: {
-            data: trendData.series.map(item => item.name),
-            textStyle: { color: '#b8c2d9' }
           },
           grid: {
             left: '3%',
@@ -936,88 +838,499 @@
           },
           yAxis: {
             type: 'value',
+            name: '点击率 (%)',
             axisLine: { lineStyle: { color: '#2a3655' } },
-            axisLabel: { color: '#b8c2d9' },
+            axisLabel: { color: '#b8c2d9', formatter: '{value}%' },
             splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } }
           },
-          series: trendData.series.map((item, index) => ({
-            name: item.name,
-            type: 'line',
-            data: item.data,
-            smooth: true,
-            lineStyle: { width: 3, color: colors[index] },
-            itemStyle: { color: colors[index], borderRadius: 5 },
-            symbol: 'circle',
-            symbolSize: 8
-          }))
+          series: [
+            {
+              name: '点击率',
+              type: 'line',
+              data: trendData.series[0].data,
+              smooth: true,
+              lineStyle: {
+                width: 4,
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: '#9c27b0' },
+                  { offset: 1, color: '#2196f3' }
+                ])
+              },
+              itemStyle: { color: '#9c27b0' },
+              areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: 'rgba(156, 39, 176, 0.3)' },
+                  { offset: 1, color: 'rgba(156, 39, 176, 0.1)' }
+                ])
+              },
+              symbol: 'circle',
+              symbolSize: 8
+            }
+          ]
         };
 
         myChart.setOption(option);
         window.addEventListener('resize', () => myChart.resize());
       } catch (e) {
         console.error('渲染时间趋势图表失败：', e);
-        if (chartContainer) {
-          chartContainer.innerHTML = `
-            <div class="loading" style="color: #ff4444;">
-              <i class="fas fa-exclamation-circle"></i>
-              <p>图表加载失败：${e.message}</p>
-            </div>
-          `;
-        }
+        loadingDiv.innerHTML = `
+          <div class="loading" style="color: #ff4444;">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>图表加载失败</p>
+          </div>
+        `;
       }
     }
 
-    // 渲染转化率图表
-    async function renderConvertChart() {
-      // 查找图表容器
-      let chartContainer = document.querySelector('.dashboard-card .chart-container');
-      if (!chartContainer) {
-        // 尝试更精确的查找
-        const cards = document.querySelectorAll('.dashboard-card');
-        for (let card of cards) {
-          const container = card.querySelector('.chart-container');
-          if (container && !container.querySelector('canvas')) {
-            chartContainer = container;
-            break;
-          }
-        }
-      }
+    // 渲染用户行为分布饼图
+    async function renderBehaviorPieChart() {
+      const chartContainer = document.querySelector('#behaviorPieChart');
+      if (!chartContainer) return;
 
-      if (!chartContainer) {
-        console.error('找不到图表容器');
-        return;
-      }
-
-      // 显示加载状态
-      chartContainer.innerHTML = `
-        <div class="loading">
-          <i class="fas fa-spinner"></i>
-          <p>数据加载中...</p>
-        </div>
-      `;
+      const loadingDiv = chartContainer.parentElement;
+      loadingDiv.innerHTML = '<div id="behaviorPieChartInner" class="chart-placeholder"></div>';
 
       try {
-        const convertData = await fetchApiData('/shoppingLevel/convert');
-        await new Promise(resolve => setTimeout(resolve, 300));
+        const distributionData = await fetchApiData('/requirement2/distribution');
+        const chartDom = document.getElementById('behaviorPieChartInner');
+        if (!chartDom) return;
 
-        // 清空容器并创建图表div
-        chartContainer.innerHTML = '<div id="convertChart" class="chart-placeholder"></div>';
+        const myChart = echarts.init(chartDom);
 
-        // 获取图表元素
-        const chartElement = document.getElementById('convertChart');
-        if (!chartElement) {
-          throw new Error('图表元素创建失败');
+        const option = {
+          backgroundColor: 'transparent',
+          tooltip: {
+            trigger: 'item',
+            formatter: '{a} <br/>{b}: {c}%',
+            textStyle: { color: '#fff' }
+          },
+          legend: {
+            orient: 'vertical',
+            left: 'left',
+            textStyle: { color: '#b8c2d9' }
+          },
+          series: [
+            {
+              name: '行为分布',
+              type: 'pie',
+              radius: '70%',
+              data: distributionData.data,
+              label: {
+                color: '#b8c2d9',
+                formatter: '{b}: {d}%'
+              },
+              itemStyle: {
+                borderRadius: 5,
+                borderColor: '#0f1a2f',
+                borderWidth: 2
+              },
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              },
+              color: ['#e91e63', '#673ab7']
+            }
+          ]
+        };
+
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+      } catch (e) {
+        console.error('渲染行为分布饼图失败：', e);
+        loadingDiv.innerHTML = `
+          <div class="loading" style="color: #ff4444;">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>图表加载失败</p>
+          </div>
+        `;
+      }
+    }
+
+    // 渲染用户行为柱状图
+async function renderBehaviorBarChart() {
+  const chartContainer = document.querySelector('#behaviorBarChart');
+  if (!chartContainer) {
+    console.warn('图表容器#behaviorBarChart不存在');
+    return;
+  }
+
+  const loadingDiv = chartContainer.parentElement;
+  // 强制设置容器宽高，避免尺寸异常
+  loadingDiv.innerHTML = '<div id="behaviorBarChartInner" class="chart-placeholder" style="width: 100%; height: 400px;"></div>';
+
+  try {
+    // 保持原请求地址不变
+    const behaviorData = await fetchApiData('/pidclkany');
+    console.log('接口返回数据：', behaviorData);
+
+    // 校验数据结构（适配新格式）
+    if (!behaviorData || !Array.isArray(behaviorData.xAxis) || !Array.isArray(behaviorData.series)) {
+      throw new Error('接口返回数据格式异常，缺少xAxis或series字段');
+    }
+    // 校验series数据有效性
+    const seriesItem = behaviorData.series[0];
+    if (!seriesItem || !Array.isArray(seriesItem.data)) {
+      throw new Error('series数据格式错误，无有效数据');
+    }
+    // 校验xAxis和data长度匹配
+    if (behaviorData.xAxis.length !== seriesItem.data.length) {
+      throw new Error('X轴数据与系列数据长度不匹配');
+    }
+
+    // 等待DOM渲染完成
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const chartDom = document.getElementById('behaviorBarChartInner');
+    if (!chartDom) {
+      throw new Error('图表内层容器#behaviorBarChartInner不存在');
+    }
+
+    // 校验ECharts是否加载
+    if (typeof echarts === 'undefined') {
+      throw new Error('ECharts库未正确引入，请检查CDN或本地引入');
+    }
+    const myChart = echarts.init(chartDom);
+
+    // ECharts配置项（适配新数据格式）
+    const option = {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        textStyle: { color: '#fff', fontSize: 12 },
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        borderColor: '#2a3655',
+        borderWidth: 1,
+        padding: [8, 12],
+        formatter: (params) => `${params[0].axisValue}：<strong>${params[0].value.toFixed(2)}%</strong>`
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        top: '8%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: behaviorData.xAxis, // 直接使用后端返回的xAxis
+        axisLine: { lineStyle: { color: '#2a3655', width: 1.2 } },
+        axisLabel: { color: '#b8c2d9', fontSize: 11 },
+        axisTick: { length: 6 },
+        boundaryGap: [0.1, 0.2]
+      },
+      yAxis: {
+        type: 'value',
+        name: '点击率 (%)',
+        nameTextStyle: { color: '#b8c2d9', fontSize: 11 },
+        axisLine: { lineStyle: { color: '#2a3655', width: 1.2 } },
+        axisLabel: {
+          color: '#b8c2d9',
+          fontSize: 11,
+          formatter: (val) => val.toFixed(2) + '%'
+        },
+        splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } },
+        min: 0
+      },
+      series: [
+        {
+          name: seriesItem.name || '点击率', // 使用后端返回的series名称
+          type: 'bar',
+          data: seriesItem.data, // 直接使用后端返回的series数据
+          itemStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: '#409eff' },
+              { offset: 1, color: '#1890ff' }
+            ]),
+            borderRadius: 4,
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 0.5
+          },
+          label: {
+            show: true,
+            position: 'top',
+            color: '#fff',
+            fontSize: 10,
+            fontWeight: 'bold',
+            formatter: (p) => p.value.toFixed(2) + '%'
+          },
+          barWidth: '40%'
         }
+      ]
+    };
 
-        const myChart = echarts.init(chartElement);
+    // 渲染图表
+    myChart.setOption(option);
+    // 监听窗口resize
+    window.addEventListener('resize', () => {
+      if (myChart) myChart.resize();
+    });
 
-        const colors = ['#9c27b0', '#4caf50'];
+  } catch (e) {
+    console.error('渲染行为柱状图失败详情：', e);
+    loadingDiv.innerHTML = `
+      <div class="loading" style="color: #ff4444; display: flex; align-items: center; justify-content: center; height: 400px; flex-direction: column; gap: 8px;">
+        <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
+        <p>图表加载失败</p>
+        <p style="font-size: 12px; color: #ff8888;">${e.message}</p>
+      </div>
+    `;
+  }
+}
+    // 渲染城市层级点击率图表
+    async function renderCityLevelChart() {
+      const chartContainer = document.querySelector('#cityLevelChart');
+      if (!chartContainer) return;
+
+      const loadingDiv = chartContainer.parentElement;
+      loadingDiv.innerHTML = '<div id="cityLevelChartInner" class="chart-placeholder"></div>';
+
+      try {
+        const cityData = await fetchApiData('/requirement4/city');
+        const chartDom = document.getElementById('cityLevelChartInner');
+        if (!chartDom) return;
+
+        const myChart = echarts.init(chartDom);
+
+        // 工具函数1：格式化品牌名称（去掉小数，如44923.0 → 44923）
+        const formatBrandName = (name) => {
+          return name.replace(/(\d+)\.0/, '$1'); // 匹配数字+.0，替换为纯数字
+        };
+
+        // 工具函数2：过滤有数据的系列 + 格式化名称
+        const processSeries = (rawSeries) => {
+          return rawSeries
+            .filter(series => series.data.some(val => val > 0)) // 过滤【全0数据】的系列
+            .map(series => ({
+              ...series,
+              name: formatBrandName(series.name),
+              data: series.data.map(val => val > 0 ? val : null) // 0值替换为null（不渲染）
+            }));
+        };
+        const processedSeries = processSeries(cityData.series);
+
+        // 工具函数3：生成更丰富的渐变配色（避免颜色重复过多）
+        const getSeriesColor = (index) => {
+          const colorGradients = [
+            [['#4caf50', '#2e7d32'], ['#8bc34a', '#558b2f']], // 绿色系
+            [['#00a1ff', '#007bff'], ['#2196f3', '#1976d2']], // 蓝色系
+            [['#ff9800', '#e65100'], ['#ffb74d', '#ef6c00']], // 橙色系
+            [['#9c27b0', '#6a1b9a'], ['#ba68c8', '#8e24aa']], // 紫色系
+            [['#f44336', '#b71c1c'], ['#ef5350', '#c62828']], // 红色系
+            [['#795548', '#4e342e'], ['#8d6e63', '#5d4037']], // 棕色系
+            [['#607d8b', '#37474f'], ['#90a4ae', '#455a64']]  // 灰色系
+          ];
+          const colorPair = colorGradients.flat()[index % colorGradients.flat().length];
+          return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: colorPair[0] },
+            { offset: 1, color: colorPair[1] }
+          ]);
+        };
+
+        const option = {
+          backgroundColor: 'transparent',
+          // 1. 优化Tooltip：更大字体+清晰格式
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+            textStyle: { color: '#fff', fontSize: 13 }, // 增大字体
+            backgroundColor: 'rgba(0, 0, 0, 0.8)', // 更深背景，提升对比度
+            borderColor: '#2a3655',
+            borderWidth: 1,
+            padding: [10, 15], // 增大内边距
+            formatter: function (params) {
+              const currentCity = `${params[0].axisValue}级城市`;
+              let tipHtml = `<div style="text-align: center; margin-bottom: 6px; font-weight: bold;">${currentCity}</div>`;
+              params.forEach(item => {
+                if (item.value > 0) {
+                  tipHtml += `<div style="margin: 2px 0;">${item.seriesName}：<strong>${item.value}%</strong></div>`;
+                }
+              });
+              return tipHtml;
+            }
+          },
+          // 2. 优化图例：更大字体+合理间距
+          legend: {
+            data: processedSeries.map(item => item.name),
+            textStyle: { color: '#b8c2d9', fontSize: 11 }, // 增大图例字体
+            type: 'scroll',
+            orient: 'horizontal',
+            top: '0%',
+            left: '5%',
+            right: '5%',
+            pageTextStyle: { color: '#b8c2d9' }, // 分页按钮文字颜色
+            pageIconColor: '#b8c2d9', // 分页按钮图标颜色
+            pageIconInactiveColor: '#666',
+            pageButtonGap: 8
+          },
+          grid: {
+            left: '4%',
+            right: '4%',
+            bottom: '4%',
+            top: '20%', // 进一步增大顶部空间
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: cityData.xAxis.map(item => `${item}级城市`), // X轴显示更完整（如“1级城市”）
+            axisLine: { lineStyle: { color: '#2a3655', width: 1.2 } }, // 加粗轴线
+            axisLabel: { color: '#b8c2d9', fontSize: 12 }, // 增大X轴字体
+            axisTick: { length: 6 } // 加长刻度线
+          },
+          yAxis: {
+            type: 'value',
+            name: '点击率 (%)',
+            nameTextStyle: { color: '#b8c2d9', fontSize: 12 }, // 增大Y轴名称字体
+            axisLine: { lineStyle: { color: '#2a3655', width: 1.2 } },
+            axisLabel: { color: '#b8c2d9', fontSize: 12, formatter: '{value}%' },
+            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.4)' } }, // 加深分割线
+            max: 100,
+            min: 0
+          },
+          // 3. 优化柱子：解决重叠+增大标签字体
+          series: processedSeries.map((item, index) => ({
+            name: item.name,
+            type: 'bar',
+            data: item.data,
+            itemStyle: {
+              color: getSeriesColor(index),
+              borderRadius: 6, // 更大圆角，更美观
+              borderColor: 'rgba(255,255,255,0.1)', // 轻微描边，区分柱子
+              borderWidth: 0.5
+            },
+            label: {
+              show: true,
+              position: 'top',
+              distance: 6, // 增大标签与柱子的距离
+              formatter: (params) => params.value > 0 ? `${params.value}%` : '',
+              color: '#ffffff', // 标签改为白色，更醒目
+              fontSize: 11, // 增大标签字体
+              fontWeight: 'bold'
+            },
+            barWidth: '5%', // 进一步缩小柱子宽度，彻底解决重叠
+            barGap: '8%',    // 最小化同城市内间距
+            barCategoryGap: '40%' // 增大城市间间距，更舒展
+          }))
+        };
+
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+      } catch (e) {
+        console.error('渲染城市层级图表失败：', e);
+        loadingDiv.innerHTML = `
+          <div class="loading" style="color: #ff4444;">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>图表加载失败</p>
+          </div>
+        `;
+      }
+    }
+
+    // 渲染消费档次点击率图表
+    async function renderConsumptionLevelChart() {
+      const chartContainer = document.querySelector('#consumptionLevelChart');
+      if (!chartContainer) return;
+
+      const loadingDiv = chartContainer.parentElement;
+      loadingDiv.innerHTML = '<div id="consumptionLevelChartInner" class="chart-placeholder"></div>';
+
+      try {
+        const consumptionData = await fetchApiData('/consumption/level');
+        const chartDom = document.getElementById('consumptionLevelChartInner');
+        if (!chartDom) return;
+
+        const myChart = echarts.init(chartDom);
+
+        const option = {
+          backgroundColor: 'transparent',
+          tooltip: {
+            trigger: 'axis',
+            formatter: '{b}<br/>点击率: {c}%',
+            textStyle: { color: '#fff' }
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: consumptionData.xAxis,
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' }
+          },
+          yAxis: {
+            type: 'value',
+            name: '点击率 (%)',
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9', formatter: '{value}%' },
+            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } }
+          },
+          series: [
+            {
+              name: '点击率',
+              type: 'bar',
+              data: consumptionData.series[0].data,
+              itemStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: '#2196f3' },
+                  { offset: 1, color: '#0d47a1' }
+                ]),
+                borderRadius: 4
+              },
+              label: {
+                show: true,
+                position: 'top',
+                formatter: '{c}%',
+                color: '#fff'
+              }
+            }
+          ]
+        };
+
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+      } catch (e) {
+        console.error('渲染消费档次图表失败：', e);
+        loadingDiv.innerHTML = `
+          <div class="loading" style="color: #ff4444;">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>图表加载失败</p>
+          </div>
+        `;
+      }
+    }
+
+    // 渲染消费档次转化率图表
+    async function renderConsumptionConvertChart() {
+      const chartContainer = document.querySelector('#consumptionConvertChart');
+      if (!chartContainer) return;
+
+      const loadingDiv = chartContainer.parentElement;
+      loadingDiv.innerHTML = '<div id="consumptionConvertChartInner" class="chart-placeholder"></div>';
+
+      try {
+        const convertData = await fetchApiData('/consumption/convert');
+        const chartDom = document.getElementById('consumptionConvertChartInner');
+        if (!chartDom) return;
+
+        const myChart = echarts.init(chartDom);
+
         const option = {
           backgroundColor: 'transparent',
           tooltip: {
             trigger: 'axis',
             textStyle: { color: '#fff' },
-            formatter: '{b}: {c}%'
+            formatter: function(params) {
+              let result = params[0].name + '<br/>';
+              params.forEach(param => {
+                result += `${param.seriesName}: ${param.value}%<br/>`;
+              });
+              return result;
+            }
           },
           legend: {
             data: convertData.series.map(item => item.name),
@@ -1037,28 +1350,256 @@
           },
           yAxis: {
             type: 'value',
+            name: '转化率 (%)',
             axisLine: { lineStyle: { color: '#2a3655' } },
             axisLabel: { color: '#b8c2d9', formatter: '{value}%' },
-            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } },
-            min: 0,
-            max: 5
+            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } }
           },
-          series: convertData.series.map((item, index) => ({
+          series: [
+            {
+              name: '点击转化率',
+              type: 'line',
+              data: convertData.series[0].data,
+              smooth: true,
+              lineStyle: { width: 3, color: '#9c27b0' },
+              itemStyle: { color: '#9c27b0' },
+              symbol: 'circle',
+              symbolSize: 8
+            },
+            {
+              name: '购买转化率',
+              type: 'line',
+              data: convertData.series[1].data,
+              smooth: true,
+              lineStyle: { width: 3, color: '#4caf50' },
+              itemStyle: { color: '#4caf50' },
+              symbol: 'circle',
+              symbolSize: 8
+            }
+          ]
+        };
+
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+      } catch (e) {
+        console.error('渲染消费档次转化率图表失败：', e);
+        loadingDiv.innerHTML = `
+          <div class="loading" style="color: #ff4444;">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>图表加载失败</p>
+          </div>
+        `;
+      }
+    }
+
+    // 渲染购物深度行为分布图表
+    async function renderBehaviorChart() {
+      const chartContainer = document.querySelector('#behaviorChart');
+      if (!chartContainer) return;
+
+      const loadingDiv = chartContainer.parentElement;
+      loadingDiv.innerHTML = '<div id="behaviorChartInner" class="chart-placeholder"></div>';
+
+      try {
+        const behaviorData = await fetchApiData('/shoppingLevel/behavior');
+        const chartDom = document.getElementById('behaviorChartInner');
+        if (!chartDom) return;
+
+        const myChart = echarts.init(chartDom);
+
+        const option = {
+          backgroundColor: 'transparent',
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+            textStyle: { color: '#fff', fontSize: 12 },
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            borderColor: '#2a3655',
+            borderWidth: 1,
+            padding: [8, 12],
+            formatter: function (params) {
+              let result = `<div style="text-align: center; margin-bottom: 4px;">${params[0].axisValue}级城市</div>`;
+              params.forEach(item => {
+                result += `<div>${item.seriesName}：<strong>${item.value}</strong></div>`;
+              });
+              return result;
+            }
+          },
+          legend: {
+            data: behaviorData.series.map(item => item.name),
+            textStyle: { color: '#b8c2d9' }
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            top: '10%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: behaviorData.xAxis,
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' },
+            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } },
+            max: function (value) {
+              return value.max * 1.1;
+            }
+          },
+            series: behaviorData.series.map(item => ({
             name: item.name,
             type: 'bar',
             data: item.data,
-            itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: colors[index] },
-                { offset: 1, color: colors[index] + '80' }
-              ]),
-              borderRadius: 4
-            },
+            itemStyle: { borderRadius: 4 },
             label: {
               show: true,
               position: 'top',
-              formatter: '{c}%',
-              color: '#fff'
+              distance: 5,
+              color: '#b8c2d9',
+              fontSize: 11,
+              formatter: (params) => params.value
+            },
+            // ========== 核心改动：调整柱子宽度 ==========
+            // 方案1：固定百分比（推荐，适配不同数据量）
+            barWidth: '20%', // 原60% → 改为40%，柱子更窄；可根据需求调整为30%-70%
+            // 方案2：固定像素宽度（适合数据量固定的场景，比如只有5个x轴类目）
+            // barWidth: 50, // 每个柱子固定50px宽
+            // ==========================================
+
+            // 可选：多系列时，调整系列间柱子的间距（避免重叠）
+            barGap: '5%', // 同类目下不同系列柱子的间距（百分比为柱子宽度的比例）
+            barCategoryGap: '30%' // 不同类目之间的间距
+          }))
+        };
+
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+      } catch (e) {
+        console.error('渲染行为分布图表失败：', e);
+        loadingDiv.innerHTML = `
+          <div class="loading" style="color: #ff4444;">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>图表加载失败</p>
+          </div>
+        `;
+      }
+    }
+
+    // 渲染购物深度时间趋势图表
+    async function renderTrendChart() {
+      const chartContainer = document.querySelector('#trendChart');
+      if (!chartContainer) return;
+
+      const loadingDiv = chartContainer.parentElement;
+      loadingDiv.innerHTML = '<div id="trendChartInner" class="chart-placeholder"></div>';
+
+      try {
+        const trendData = await fetchApiData('/shoppingLevel/trend');
+        const chartDom = document.getElementById('trendChartInner');
+        if (!chartDom) return;
+
+        const myChart = echarts.init(chartDom);
+
+        const colors = ['#00a1ff', '#00ffaa', '#e91e63'];
+        const option = {
+          backgroundColor: 'transparent',
+          // 1. 优化Tooltip：显示更清晰的详细信息
+          tooltip: {
+            trigger: 'axis',
+            textStyle: { color: '#fff', fontSize: 12 },
+            backgroundColor: 'rgba(0, 0, 0, 0.7)', // 半透明背景更醒目
+            borderColor: '#2a3655',
+            borderWidth: 1,
+            padding: [8, 12], // 内边距避免文字拥挤
+            axisPointer: {
+              type: 'cross', // 十字准星指针，精准定位X/Y轴
+              lineStyle: { color: 'rgba(184, 194, 217, 0.5)' } // 指针样式
+            },
+            // 自定义提示格式：明确显示维度+数值
+            formatter: function (params) {
+              // 先显示X轴维度（比如日期/时段）
+              let tipHtml = `<div style="text-align: center; margin-bottom: 4px;"><strong>${params[0].axisValue}</strong></div>`;
+              // 遍历每个系列，显示名称+具体数值
+              params.forEach(item => {
+                // 用系列颜色作为前缀，视觉更直观
+                tipHtml += `<div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="width: 8px; height: 8px; background: ${item.color}; border-radius: 50%;"></span>
+                  <span>${item.seriesName}：</span>
+                  <span style="font-weight: bold;">${item.value}</span>
+                </div>`;
+              });
+              return tipHtml;
+            }
+          },
+          legend: {
+            data: trendData.series.map(item => item.name),
+            textStyle: { color: '#b8c2d9' },
+            // 可选：图例悬浮高亮对应折线
+            tooltip: { show: true },
+            itemHoverStyle: { color: '#fff' } // 悬浮时图例文字变亮
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            top: '10%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'category',
+            data: trendData.xAxis,
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' },
+            // 可选：X轴刻度线，辅助定位
+            axisTick: { lineStyle: { color: '#2a3655' } }
+          },
+          yAxis: {
+            type: 'value',
+            axisLine: { lineStyle: { color: '#2a3655' } },
+            axisLabel: { color: '#b8c2d9' },
+            splitLine: { lineStyle: { color: 'rgba(42, 54, 85, 0.3)' } },
+            // 可选：Y轴刻度线
+            axisTick: { lineStyle: { color: '#2a3655' } }
+          },
+          series: trendData.series.map((item, index) => ({
+            name: item.name,
+            type: 'line',
+            data: item.data,
+            smooth: true,
+            lineStyle: {
+              width: 3,
+              color: colors[index],
+              // 可选：悬浮时折线变粗
+              emphasis: { width: 5 }
+            },
+            itemStyle: {
+              color: colors[index],
+              // 可选：数据点悬浮时高亮
+              emphasis: { borderColor: '#fff', borderWidth: 2 }
+            },
+            symbol: 'circle',
+            symbolSize: 8,
+            // 可选：数据点悬浮时放大
+            emphasis: { symbolSize: 12 },
+            // 2. 可选：数据点显示数值标签（按需开启）
+            label: {
+              show: false, // 默认为false，避免图表拥挤；需要时改为true
+              position: 'top', // 标签位置：数据点上方
+              color: colors[index],
+              fontSize: 11,
+              formatter: (params) => params.value
+            },
+            // 3. 可选：折线下方填充渐变色，增强视觉效果
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: `${colors[index]}80` }, // 顶部半透明
+                { offset: 1, color: `${colors[index]}10` }  // 底部更透明
+              ])
             }
           }))
         };
@@ -1066,19 +1607,17 @@
         myChart.setOption(option);
         window.addEventListener('resize', () => myChart.resize());
       } catch (e) {
-        console.error('渲染转化率图表失败：', e);
-        if (chartContainer) {
-          chartContainer.innerHTML = `
-            <div class="loading" style="color: #ff4444;">
-              <i class="fas fa-exclamation-circle"></i>
-              <p>图表加载失败：${e.message}</p>
-            </div>
-          `;
-        }
+        console.error('渲染时间趋势图表失败：', e);
+        loadingDiv.innerHTML = `
+          <div class="loading" style="color: #ff4444;">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>图表加载失败</p>
+          </div>
+        `;
       }
     }
 
-    // ========== 路由配置（保持原有结构） ==========
+    // ========== 路由配置 ==========
     const routes = {
       '/index': {
         title: '淘宝广告点击量大数据分析',
@@ -1212,11 +1751,10 @@
                   <i class="fas fa-chart-line"></i>
                   <span>24小时点击率趋势</span>
                 </div>
-                <div class="chart-container">
-                  <div style="text-align: center; color: #b8c2d9;">
-                    <i class="fas fa-chart-line" style="font-size: 60px; margin-bottom: 20px; color: #9c27b0;"></i>
-                    <p>点击率随时间变化趋势图</p>
-                    <p style="font-size: 14px; margin-top: 10px;">高峰期：14:00-16:00</p>
+                <div class="chart-container" id="timeTrendChart">
+                  <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>数据加载中...</p>
                   </div>
                 </div>
               </div>
@@ -1245,10 +1783,22 @@
                           <td style="padding: 10px; color: #4caf50;">2.31%</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #2a3655;">
+                          <td style="padding: 10px;">08:00-09:00</td>
+                          <td style="padding: 10px;">245,678</td>
+                          <td style="padding: 10px;">5,432</td>
+                          <td style="padding: 10px; color: #00ffaa;">2.21%</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #2a3655;">
                           <td style="padding: 10px;">14:00-15:00</td>
                           <td style="padding: 10px;">356,789</td>
                           <td style="padding: 10px;">9,876</td>
                           <td style="padding: 10px; color: #00ffaa;">2.77%</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #2a3655;">
+                          <td style="padding: 10px;">20:00-21:00</td>
+                          <td style="padding: 10px;">298,765</td>
+                          <td style="padding: 10px;">7,432</td>
+                          <td style="padding: 10px; color: #4caf50;">2.49%</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1257,15 +1807,16 @@
               </div>
             </div>
           </div>
-        `
+        `,
+        afterRender: renderTimeTrendChart
       },
       '/requirement2': {
-        title: '用户行为分布分析',
+        title: '用户点击行为与各个资源位点击率分析',
         content: `
           <div class="page-content">
             <h2 class="page-title">
               <i class="fas fa-chart-pie"></i>
-              用户点击行为分布分析
+             用户点击行为与各个资源位点击率分析
             </h2>
             <p class="page-desc">
               分析用户点击与未点击广告的整体分布情况，了解广告的整体点击表现和用户行为特征。
@@ -1275,10 +1826,10 @@
               <div class="detail-title">📈 数据分布分析</div>
               <div class="detail-content">
                 <div class="detail-item">
-                  <strong>特征值：</strong>点击、未点击
+                  <strong>特征值：</strong>饼图：点击，未点击 柱状图：资源位，点击率
                 </div>
                 <div class="detail-item">
-                  <strong>数据库字段：</strong>raw_sample表中的clk（点击标识）
+                  <strong>数据库字段：</strong>raw_sample表中的clk（点击标识）与pid(资源位)
                 </div>
                 <div class="detail-item">
                   <strong>处理算法：</strong>
@@ -1297,18 +1848,33 @@
                   <i class="fas fa-pie-chart"></i>
                   <span>点击行为分布图</span>
                 </div>
-                <div class="chart-container">
-                  <div style="text-align: center; color: #b8c2d9;">
-                    <i class="fas fa-chart-pie" style="font-size: 80px; margin-bottom: 20px; color: #e91e63;"></i>
-                    <p>点击：2.34%</p>
-                    <p>未点击：97.66%</p>
-                    <p style="font-size: 14px; margin-top: 10px;">总展示次数：15,678,432</p>
+                <div class="chart-container" id="behaviorPieChart">
+                  <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>数据加载中...</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dashboard-card">
+                <div class="dashboard-title">
+                  <i class="fas fa-chart-bar"></i>
+                  <span>用户行为类型分布</span>
+                </div>
+                <div class="chart-container" id="behaviorBarChart">
+                  <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>数据加载中...</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        `
+        `,
+        afterRender: function() {
+          renderBehaviorPieChart();
+          renderBehaviorBarChart();
+        }
       },
       '/requirement3': {
         title: '消费档次分析',
@@ -1375,8 +1941,24 @@
                 </div>
               </div>
             </div>
+
+            <div class="dashboard-area">
+              <div class="dashboard-card" style="grid-column: span 2;">
+                <div class="dashboard-title">
+                  <i class="fas fa-chart-bar"></i>
+                  <span>不同城市层级点击率对比</span>
+                </div>
+                <div class="chart-container" id="cityLevelChart">
+                  <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>数据加载中...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        `
+        `,
+        afterRender: renderCityLevelChart
       },
       '/requirement5': {
         title: '购物深度分析',
@@ -1412,6 +1994,52 @@
           </div>
         `
       },
+      '/consumption/level': {
+        title: '消费档次-点击分析',
+        content: `
+          <div class="page-content">
+            <h2 class="page-title">
+              <i class="fas fa-list"></i>
+              消费档次-点击率分析
+            </h2>
+            <p class="page-desc">
+              分析不同消费档次用户的广告点击率差异，为精准营销和用户分层运营提供数据依据。
+            </p>
+
+            <div class="detail-section">
+              <div class="detail-title">📊 数据说明</div>
+              <div class="detail-content">
+                <div class="detail-item">
+                  <strong>数据来源：</strong>后端接口 /api/consumption/level
+                </div>
+                <div class="detail-item">
+                  <strong>统计维度：</strong>按消费档次分层，统计各档次的广告点击率
+                </div>
+                <div class="detail-item">
+                  <strong>核心结论：</strong>消费档次越高，广告点击率越高
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-area">
+              <div class="dashboard-card" style="grid-column: span 2;">
+                <div class="dashboard-title">
+                  <i class="fas fa-chart-bar"></i>
+                  <span>不同消费档次点击率对比</span>
+                </div>
+                <div class="chart-container" id="consumptionLevelChart">
+                  <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>数据加载中...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `,
+        afterRender: renderConsumptionLevelChart
+      },
+
       '/shoppingLevel/behavior': {
         title: '购物深度-行为分布',
         content: `
@@ -1445,8 +2073,11 @@
                   <i class="fas fa-chart-bar"></i>
                   <span>不同购物深度用户行为分布</span>
                 </div>
-                <div class="chart-container">
-                  <div id="behaviorChart" class="chart-placeholder"></div>
+                <div class="chart-container" id="behaviorChart">
+                  <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>数据加载中...</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1487,56 +2118,17 @@
                   <i class="fas fa-chart-line"></i>
                   <span>不同购物深度用户活跃时间趋势</span>
                 </div>
-                <div class="chart-container">
-                  <div id="trendChart" class="chart-placeholder"></div>
+                <div class="chart-container" id="trendChart">
+                  <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>数据加载中...</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         `,
         afterRender: renderTrendChart
-      },
-      '/shoppingLevel/convert': {
-        title: '购物深度-转化率分析',
-        content: `
-          <div class="page-content">
-            <h2 class="page-title">
-              <i class="fas fa-percentage"></i>
-              购物深度-用户转化率分析
-            </h2>
-            <p class="page-desc">
-              分析不同购物深度用户的点击转化率和购买转化率，评估不同层级用户的商业价值。
-            </p>
-
-            <div class="detail-section">
-              <div class="detail-title">🎯 数据说明</div>
-              <div class="detail-content">
-                <div class="detail-item">
-                  <strong>数据来源：</strong>后端接口 /api/shoppingLevel/convert
-                </div>
-                <div class="detail-item">
-                  <strong>统计维度：</strong>按购物深度分层，计算点击/购买转化率
-                </div>
-                <div class="detail-item">
-                  <strong>核心结论：</strong>购物深度3级用户的购买转化率是1级用户的4倍+
-                </div>
-              </div>
-            </div>
-
-            <div class="dashboard-area">
-              <div class="dashboard-card" style="grid-column: span 2;">
-                <div class="dashboard-title">
-                  <i class="fas fa-chart-bar"></i>
-                  <span>不同购物深度用户转化率对比</span>
-                </div>
-                <div class="chart-container">
-                  <div id="convertChart" class="chart-placeholder"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        `,
-        afterRender: renderConvertChart
       },
       '/detail': {
         title: '详情分析报告',
@@ -1614,13 +2206,13 @@
     // ========== 核心修复4：菜单折叠功能优化 ==========
     const shoppingLevelParent = document.getElementById('shoppingLevelParent');
     const shoppingLevelSubmenu = document.getElementById('shoppingLevelSubmenu');
-    let isSubmenuOpen = false;
+    let isShoppingSubmenuOpen = false;
     shoppingLevelParent.classList.add('collapsed');
 
     shoppingLevelParent.addEventListener('click', function(e) {
       e.stopPropagation();
-      isSubmenuOpen = !isSubmenuOpen;
-      if (isSubmenuOpen) {
+      isShoppingSubmenuOpen = !isShoppingSubmenuOpen;
+      if (isShoppingSubmenuOpen) {
         shoppingLevelSubmenu.classList.add('show');
         shoppingLevelParent.classList.remove('collapsed');
       } else {
@@ -1629,14 +2221,32 @@
       }
     });
 
-    // ========== 核心修复5：路由逻辑增强（解决渲染时机问题） ==========
+    // 消费档次折叠菜单
+    const consumptionParent = document.getElementById('consumptionParent');
+    const consumptionSubmenu = document.getElementById('consumptionSubmenu');
+    let isConsumptionSubmenuOpen = false;
+    consumptionParent.classList.add('collapsed');
+
+    consumptionParent.addEventListener('click', function(e) {
+      e.stopPropagation();
+      isConsumptionSubmenuOpen = !isConsumptionSubmenuOpen;
+      if (isConsumptionSubmenuOpen) {
+        consumptionSubmenu.classList.add('show');
+        consumptionParent.classList.remove('collapsed');
+      } else {
+        consumptionSubmenu.classList.remove('show');
+        consumptionParent.classList.add('collapsed');
+      }
+    });
+
+    // ========== 核心修复5：路由逻辑增强 ==========
     const contentWrapper = document.getElementById('contentWrapper');
     const currentPageTitle = document.getElementById('currentPageTitle');
     const menuItems = document.querySelectorAll('.menu-item[data-route]');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.querySelector('.sidebar');
 
-    // 切换路由的核心函数（延长渲染延迟）
+    // 切换路由的核心函数
     function navigateTo(route) {
       if (!routes[route]) route = '/index';
 
@@ -1649,16 +2259,20 @@
         item.classList.remove('active');
         if (item.dataset.route === route) {
           item.classList.add('active');
-          // 自动展开购物深度子菜单
+          // 自动展开对应子菜单
           if (route.startsWith('/shoppingLevel')) {
-            isSubmenuOpen = true;
+            isShoppingSubmenuOpen = true;
             shoppingLevelSubmenu.classList.add('show');
             shoppingLevelParent.classList.remove('collapsed');
+          } else if (route.startsWith('/consumption')) {
+            isConsumptionSubmenuOpen = true;
+            consumptionSubmenu.classList.add('show');
+            consumptionParent.classList.remove('collapsed');
           }
         }
       });
 
-      // 核心修复：延迟300ms执行渲染，确保DOM完全加载
+      // 延迟执行渲染，确保DOM完全加载
       if (routes[route].afterRender) {
         setTimeout(() => {
           try {
@@ -1709,5 +2323,4 @@
     });
   </script>
 </body>
-
 </html>
